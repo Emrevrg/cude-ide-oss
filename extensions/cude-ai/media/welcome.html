@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src {{CSP}} data:; style-src 'unsafe-inline'; script-src 'nonce-{{NONCE}}';">
+<title>Cude IDE</title>
+<style>
+:root{color-scheme:light dark;--copper:#d69b70;--copper2:#e8b48c;--ink:#f3efe8;--muted:#b9b3a8;--bg:#0b0b0a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:15px/1.6 var(--vscode-font-family,"Segoe UI",system-ui,sans-serif);overflow-x:hidden}
+body.vscode-light{--bg:#f7f4ef;--ink:#1d1b17;--muted:#5f5a51}
+.hero{position:relative;min-height:min(72vh,620px);display:grid;place-items:center;overflow:hidden;isolation:isolate;padding:48px 24px;margin:16px;border-radius:24px;background:#0d0907;box-shadow:0 30px 80px -40px rgba(120,60,20,.6)}
+.hero::before{content:"";position:absolute;inset:-30%;z-index:-2;background:
+ radial-gradient(38% 48% at 28% 38%,rgba(255,170,110,.85),transparent 70%),
+ radial-gradient(34% 44% at 74% 62%,rgba(214,96,60,.75),transparent 72%),
+ radial-gradient(28% 36% at 58% 18%,rgba(255,214,170,.6),transparent 70%),
+ radial-gradient(30% 40% at 18% 80%,rgba(150,70,120,.45),transparent 70%),
+ conic-gradient(from 210deg at 50% 50%,#140c08,#3a1c10,#140c08,#4a2414,#140c08);
+ filter:blur(30px) saturate(1.1);animation:drift 18s ease-in-out infinite alternate}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:
+ radial-gradient(120% 80% at 50% 120%,rgba(0,0,0,.55),transparent 60%),
+ repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px)}
+@keyframes drift{0%{transform:translate3d(-2%,-1%,0) rotate(0deg) scale(1)}100%{transform:translate3d(2%,1%,0) rotate(8deg) scale(1.06)}}
+.card{text-align:center;max-width:760px;animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#f6e3d2;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px)}
+.mark{width:92px;height:92px;margin:26px auto 14px;color:#fff;filter:drop-shadow(0 10px 40px rgba(214,155,112,.65));animation:float 5s ease-in-out infinite}
+.mark svg{width:100%;height:100%}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+h1{margin:0;font-size:clamp(44px,8vw,84px);line-height:1;letter-spacing:-.035em;font-weight:700;background:linear-gradient(180deg,#fff,#f0d6c2 70%,#d69b70);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{margin:16px auto 0;max-width:560px;font-size:clamp(16px,2.2vw,20px);color:#efe6dc}
+.steps{max-width:980px;margin:0 auto;padding:8px 24px 48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.step{position:relative;padding:20px;border-radius:16px;background:color-mix(in srgb,var(--ink) 5%,transparent);border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s;animation:rise .8s cubic-bezier(.2,.8,.2,1) both}
+.step:nth-child(2){animation-delay:.08s}.step:nth-child(3){animation-delay:.16s}
+.step:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--copper) 55%,transparent);box-shadow:0 18px 40px -24px rgba(214,155,112,.7)}
+.num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--copper);color:#1a120c}
+.step h2{margin:12px 0 6px;font-size:17px}
+.step p{margin:0 0 14px;color:var(--muted);font-size:13.5px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button{font:600 13px var(--vscode-font-family,"Segoe UI",sans-serif);padding:9px 14px;border-radius:10px;cursor:pointer;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);background:transparent;color:var(--ink);transition:transform .18s cubic-bezier(.2,.8,.2,1),background .18s,box-shadow .2s}
+button:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--ink) 7%,transparent)}
+button:active{transform:translateY(1px) scale(.98)}
+button.primary{background:var(--copper);border-color:transparent;color:#1a120c}
+button.primary:hover{background:var(--copper2);box-shadow:0 10px 24px -12px var(--copper)}
+footer{display:flex;justify-content:center;align-items:center;gap:14px;padding:0 24px 40px;color:var(--muted);font-size:13px}
+label{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+input[type=checkbox]{accent-color:var(--copper);width:15px;height:15px}
+:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Cude theme palette: keep host blue out of webview controls. */
+body {
+  --cude-accent:#d69b70; --cude-on-accent:#090604; --cude-link:#d69b70;
+  --cude-bg:#141513; --cude-surface:#1e201c; --cude-raised:#282b25;
+  --cude-text:#f1f0e9; --cude-muted:#b6b7ae; --cude-border:#777b70;
+  --cude-positive:#a8d5aa; --cude-negative:#ffb4ab; --cude-warning:#e8c982;
+  color-scheme:dark;
+}
+body.vscode-light, body.vscode-high-contrast-light {
+  --cude-accent:#b8632f; --cude-on-accent:#090604; --cude-link:#91471f;
+  --cude-bg:#fbfaf7; --cude-surface:#ffffff; --cude-raised:#efede7;
+  --cude-text:#252720; --cude-muted:#55594f; --cude-border:#7b8073;
+  --cude-positive:#286335; --cude-negative:#a32a28; --cude-warning:#715309;
+  color-scheme:light;
+}
+body.vscode-high-contrast {
+  --cude-bg:#000000; --cude-surface:#000000; --cude-raised:#171717;
+  --cude-text:#ffffff; --cude-muted:#e0e0e0; --cude-border:#ffffff;
+  color-scheme:dark;
+}
+body.vscode-high-contrast-light { --cude-border:#252720; }
+body {
+  --accent:var(--cude-accent); --copper:var(--cude-accent); --copper2:var(--cude-accent);
+  --bg:var(--cude-bg); --surface:var(--cude-surface); --raised:var(--cude-raised);
+  --text:var(--cude-text); --ink:var(--cude-text); --muted:var(--cude-muted); --quiet:var(--cude-muted);
+  --line:var(--cude-border); --edge:var(--cude-border);
+  --positive:var(--cude-positive); --negative:var(--cude-negative);
+  --vscode-foreground:var(--cude-text); --vscode-sideBar-foreground:var(--cude-text);
+  --vscode-descriptionForeground:var(--cude-muted); --vscode-disabledForeground:var(--cude-muted);
+  --vscode-editor-background:var(--cude-bg); --vscode-sideBar-background:var(--cude-bg);
+  --vscode-input-background:var(--cude-surface); --vscode-input-foreground:var(--cude-text);
+  --vscode-editorWidget-background:var(--cude-raised); --vscode-quickInput-background:var(--cude-raised);
+  --vscode-panel-border:var(--cude-border); --vscode-input-border:var(--cude-border);
+  --vscode-button-background:var(--cude-accent); --vscode-button-foreground:var(--cude-on-accent);
+  --vscode-button-hoverBackground:var(--cude-accent);
+  --vscode-button-secondaryBackground:var(--cude-raised); --vscode-button-secondaryForeground:var(--cude-text);
+  --vscode-button-secondaryHoverBackground:var(--cude-surface);
+  --vscode-textLink-foreground:var(--cude-link); --vscode-textLink-activeForeground:var(--cude-link);
+  --vscode-list-hoverBackground:var(--cude-raised);
+  --vscode-list-activeSelectionBackground:var(--cude-accent); --vscode-list-activeSelectionForeground:var(--cude-on-accent);
+  --vscode-list-inactiveSelectionBackground:var(--cude-raised); --vscode-list-inactiveSelectionForeground:var(--cude-text);
+  --vscode-editor-selectionBackground:var(--cude-accent);
+  --vscode-testing-iconPassed:var(--cude-positive); --vscode-errorForeground:var(--cude-negative);
+  --vscode-editorWarning-foreground:var(--cude-warning);
+  background:var(--cude-bg); color:var(--cude-text);
+}
+::selection { background:var(--cude-accent); color:var(--cude-on-accent); }
+a, .file-link { color:var(--cude-link); text-decoration-color:var(--cude-accent); }
+input, select, textarea, progress { accent-color:var(--cude-accent); }
+:focus-visible { outline:2px solid var(--cude-accent)!important; outline-offset:2px; }
+input::placeholder, textarea::placeholder { color:var(--cude-muted); opacity:1; }
+button:disabled, button.action:disabled { opacity:1; filter:none; color:var(--cude-muted); background:var(--cude-raised); border-color:var(--cude-border); }
+body.vscode-high-contrast :is(button,input,select,textarea), body.vscode-high-contrast-light :is(button,input,select,textarea) { border:1px solid var(--cude-border); forced-color-adjust:none; }
+
+.hero { background:var(--cude-surface); border:1px solid var(--cude-border); }
+.hero::before { opacity:.12; }
+.hero::after { background:color-mix(in srgb,var(--cude-surface) 90%,transparent); }
+.hero h1 { background:none; color:var(--cude-text); }
+.kicker, .tag, .mark { color:var(--cude-text); }
+.kicker, .step, button { border-color:var(--cude-border); }
+.kicker { background:var(--cude-raised); }
+.num, button.primary, button.primary:hover { background:var(--cude-accent); color:var(--cude-on-accent); }
+
+/* Shared Cude component geometry and interaction. */
+body {
+  --cude-control-height:32px; --cude-control-radius:6px;
+  --cude-card-radius:8px; --cude-card-min-height:96px;
+  --cude-badge-height:22px; --cude-motion:120ms ease;
+}
+body :is(button, select, input:not([type=checkbox]):not([type=radio]), textarea) {
+  box-sizing:border-box; border-radius:var(--cude-control-radius);
+  font-size:13px; line-height:18px;
+  transition:background-color var(--cude-motion),border-color var(--cude-motion),color var(--cude-motion),transform var(--cude-motion);
+}
+body :is(button, select, input:not([type=checkbox]):not([type=radio])) {
+  height:var(--cude-control-height); min-height:var(--cude-control-height); padding-block:6px;
+}
+body button:not(:disabled):hover { filter:none; transform:none; box-shadow:none; border-color:var(--cude-accent); }
+body button:not(:disabled):active { transform:translateY(1px); }
+body :is(button,input,select,textarea,summary):focus-visible {
+  outline:2px solid var(--cude-accent)!important; outline-offset:2px;
+}
+body textarea:not([hidden]) { min-height:72px; }
+body button.entry { height:auto; min-height:56px; }
+body :is(.icon,.send) { width:32px; flex-basis:32px; padding:0; }
+body .file-link { display:inline; height:auto; min-height:0; padding:0; border-radius:0; font:inherit; }
+body :is(.card,.setup-card,.plan,.changes,.command-approval,.model-card,.free-card,.cli-card,.support-card,.team-area,.step,.hero,.cu-box,.pool-model) {
+  box-sizing:border-box; min-height:var(--cude-card-min-height); border-radius:var(--cude-card-radius);
+  border:1px solid var(--cude-border); padding:12px; background:var(--cude-surface);
+  transition:background-color var(--cude-motion),border-color var(--cude-motion);
+}
+body :is(.step,.card,.model-card,.free-card,.cli-card):hover { transform:none; box-shadow:none; border-color:var(--cude-accent); }
+body :is(.badge,.tag,.kicker,.code-lang,.card-head .count,.tab .count) {
+  box-sizing:border-box; display:inline-flex; align-items:center; min-height:var(--cude-badge-height);
+  padding:1px 6px; border-radius:var(--cude-control-radius); font-size:11px; line-height:18px;
+}
+body input[type=checkbox]:not(.switch):not(.switch input), body input[type=radio] {
+  box-sizing:border-box; width:16px; height:16px; min-height:16px; padding:0;
+  flex:0 0 16px; border-radius:3px; cursor:pointer; appearance:none;
+  border:1px solid var(--cude-border); background:var(--cude-surface);
+}
+body input[type=checkbox]:not(.switch):not(.switch input):checked {
+  background-color:var(--cude-accent); border-color:var(--cude-accent);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3 3 7-7' fill='none' stroke='%23090604' stroke-width='2'/%3E%3C/svg%3E");
+}
+body input[type=radio] { border-radius:50%; }
+body input[type=radio]:checked { background:var(--cude-accent); box-shadow:inset 0 0 0 3px var(--cude-surface); }
+body :is(button.primary,button.approve,button.setup-primary) { color:var(--cude-on-accent); background:var(--cude-accent); }
+body :is(button.secondary,button.action:not(.primary),button.reject) { color:var(--cude-text); background:var(--cude-raised); border:1px solid var(--cude-border); }
+body input.switch, body .switch input {
+  appearance:none; box-sizing:border-box; width:38px!important; height:22px; min-height:22px;
+  flex:0 0 38px; padding:0!important; border:1px solid var(--cude-border)!important; border-radius:11px!important;
+  background:var(--cude-raised)!important; position:relative; cursor:pointer;
+  transition:background-color var(--cude-motion),border-color var(--cude-motion);
+}
+body input.switch::before, body .switch input::before {
+  content:''; position:absolute; width:14px; height:14px; top:3px; left:3px;
+  border-radius:50%; background:var(--cude-text); transition:left var(--cude-motion);
+}
+body input.switch:checked, body .switch input:checked { background:var(--cude-accent)!important; border-color:var(--cude-accent)!important; }
+body input.switch:checked::before, body .switch input:checked::before { left:19px; background:var(--cude-on-accent); }
+@media (prefers-reduced-motion:reduce) {
+  body *, body *::before, body *::after { transition:none!important; animation:none!important; }
+}
+</style>
+</head>
+<body>
+<section class="hero">
+  <div class="card">
+    <span class="kicker" data-t="kicker">Introducing</span>
+    <div class="mark" aria-hidden="true">{{MARK}}</div>
+    <h1>Cude IDE</h1>
+    <p class="tag" data-t="tag">Any model. Every tool. Finished work.</p>
+  </div>
+</section>
+<section class="steps">
+  <article class="step">
+    <span class="num">1</span>
+    <h2 data-t="s1">Choose how Cude thinks</h2>
+    <p data-t="s1p">Free models from the Cude Pool, a provider you already use, or a model that runs on this PC.</p>
+    <div class="row"><button class="primary" data-cmd="free" data-t="b1a">Free models</button><button data-cmd="providers" data-t="b1b">Connect a provider</button><button data-cmd="local" data-t="b1c">Run locally</button></div>
+  </article>
+  <article class="step">
+    <span class="num">2</span>
+    <h2 data-t="s2">Open your project</h2>
+    <p data-t="s2p">Cude reads the folder you trust and proposes changes you can review before they land.</p>
+    <div class="row"><button class="primary" data-cmd="open" data-t="b2a">Open folder</button></div>
+  </article>
+  <article class="step">
+    <span class="num">3</span>
+    <h2 data-t="s3">Give Cude a task</h2>
+    <p data-t="s3p">Ask, plan, or let the agent build. Cuets splits big work across parallel workers.</p>
+    <div class="row"><button class="primary" data-cmd="chat" data-t="b3a">Open Cude AI</button><button data-cmd="language" data-t="b3b">Language</button></div>
+  </article>
+</section>
+<footer><label><input type="checkbox" id="again" checked> <span data-t="again">Show on startup</span></label></footer>
+<script nonce="{{NONCE}}">
+const vscode=acquireVsCodeApi();
+const TR={kicker:'Tanıştırıyoruz',tag:'Her model. Her araç. Bitmiş iş.',s1:'Cude nasıl düşünsün, seç',s1p:'Cude Havuzu\'ndaki ücretsiz modeller, zaten kullandığın bir sağlayıcı ya da bu bilgisayarda çalışan bir model.',b1a:'Ücretsiz modeller',b1b:'Sağlayıcı bağla',b1c:'Yerelde çalıştır',s2:'Projeni aç',s2p:'Cude güvendiğin klasörü okur ve değişiklikleri sen onaylamadan uygulamaz.',b2a:'Klasör aç',s3:'Cude\'a görev ver',s3p:'Sor, planla ya da ajana yaptır. Cuets büyük işleri paralel çalışanlara böler.',b3a:'Cude AI\'ı aç',b3b:'Dil',again:'Açılışta göster'};
+if('{{LANG}}'==='tr')document.querySelectorAll('[data-t]').forEach(el=>{const v=TR[el.dataset.t];if(v)el.textContent=v;});
+document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>vscode.postMessage({type:'run',cmd:b.dataset.cmd})));
+document.getElementById('again').checked={{SHOW_AGAIN}};
+document.getElementById('again').addEventListener('change',e=>vscode.postMessage({type:'again',value:e.target.checked}));
+</script>
+</body>
+</html>

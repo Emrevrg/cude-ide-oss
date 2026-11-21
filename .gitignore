@@ -1,0 +1,41 @@
+# Build outputs and large upstream sources
+dist/
+downloads/
+src-oss/
+extensions/cude-ai/node_modules/
+extensions/cude-ai/out/
+extensions/cude-ai/.vsix-stage/
+extensions/cude-ai/*.vsix
+*.map
+screenshots/*.tmp
+
+# Secrets and local state (never commit)
+.env
+*.env
+gateway/.env
+*.sqlite
+*.sqlite-*
+*.db
+*.token
+sss.txt
+
+# Logs and local agent notes
+*.log
+opencode_dongu.ps1
+CODEX_GOREV*.md
+CLAUDE_KONTROL_*.md
+EMRE_ISTEKLERI_*.md
+INCELEME.md
+KABUL_LISTESI.md
+KURULUM_GEREKLI.md
+RAPOR_*.md
+RUST_CEKIRDEK_PLANI.md
+GUVENLIK_DENETIMI.md
+codex-*.err
+
+# Device/release private keys
+*.pem
+*.key
+.publish-*/
+
+.device-update-qa/

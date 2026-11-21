@@ -1,0 +1,801 @@
+{
+  "name": "cude-ai",
+  "displayName": "Cude AI",
+  "description": "Built-in AI workspace for Cude IDE: chat, reviewed edits, agents, specs, MCP and project memory.",
+  "version": "0.1.0",
+  "publisher": "cude",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:cude-ai.chatView",
+    "onCommand:cude-ai.supporterCard",
+    "onCommand:cude-ai.about",
+    "onCommand:cude-ai.detectLocalTools",
+    "onCommand:cude-ai.chat",
+    "onCommand:cude-ai.cloneAndOwn",
+    "onCommand:cude-ai.editSelection",
+    "onCommand:cude-ai.configureProvider",
+    "onCommand:cude-ai.importProvidersFromEditors",
+    "onCommand:cude-ai.importNvidiaCredential",
+    "onCommand:cude-ai.configurePool",
+    "onCommand:cude-ai.acpPrompt",
+    "onCommand:cude-ai.changeLanguage",
+    "onCommand:cude-ai.spec",
+    "onCommand:cude-ai.runSpecTask",
+    "onCommand:cude-ai.agent",
+    "onCommand:cude-ai.agentManager",
+    "onCommand:cude-ai.runApprovedCommand",
+    "onCommand:cude-ai.memory",
+    "onCommand:cude-ai.saveMemory",
+    "onCommand:cude-ai.mcp",
+    "onCommand:cude-ai.mcpCall",
+    "onCommand:cude-ai.chatInEditor",
+    "onCommand:cude-ai.clearAgents",
+    "onCommand:cude-ai.openAgentSession",
+    "onCommand:cude-ai.newAgentWorktree",
+    "onCommand:cude-ai.skills",
+    "onCommand:cude-ai.toggleInlineCompletion",
+    "onCommand:cude-ai.acceptInlineEdit",
+    "onCommand:cude-ai.rejectInlineEdit",
+    "onCommand:cude-ai.retryInlineEdit",
+    "onCommand:cude-ai.reviewChanges",
+    "onCommand:cude-ai.clearReviewComments",
+    "onCommand:cude-ai.modelCatalog",
+    "onCommand:cude-ai.indexProjectSemantic",
+    "onCommand:cude-ai.updateModelCatalog",
+    "onCommand:cude-ai.routerSettings",
+    "onCommand:cude-ai.checkSignedUpdate",
+    "onCommand:cude-ai.configureReleaseTrust",
+    "onCommand:cude-ai.mcpAddTools",
+    "onCommand:cude-ai.openUpdates",
+    "onCommand:cude-ai.welcome",
+    "onCommand:cude-ai.introducing",
+    "onCommand:cude-ai.onboardingTheme",
+    "onCommand:cude-ai.onboardingLanguage",
+    "onCommand:cude-ai.onboardingLocal",
+    "onCommand:cude-ai.onboardingAgents",
+    "onCommand:cude-ai.connectDesktopApps",
+    "onCommand:cude-ai.stopComputer",
+    "onCommand:cude-ai.toggleComputerUse",
+    "onCommand:cude-ai.toggleBrowserControl",
+    "onCommand:cude-ai.showDesktopApps",
+    "onCommand:cude-ai.memoryHealth"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "main": "./out/extension.js",
+  "configurationDefaults": {
+    "workbench.colorTheme": "Cude Dark",
+    "workbench.iconTheme": "cude-icons",
+    "workbench.sideBar.location": "left",
+    "workbench.activityBar.location": "top",
+    "workbench.secondarySideBar.defaultVisibility": "visible",
+    "window.commandCenter": true,
+    "window.title": "${rootName}${separator}Cude",
+    "editor.minimap.enabled": false,
+    "extensions.ignoreRecommendations": true,
+    "workbench.editor.empty.hint": "text",
+    "editor.inlineSuggest.enabled": true,
+    "window.menuBarVisibility": "hidden",
+    "window.titleBarStyle": "custom"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "cude-ai.settings",
+        "title": "Cude Settings",
+        "category": "Cude"
+      },
+      {
+        "command": "cude-ai.android",
+        "title": "Android Tools",
+        "category": "Cude"
+      },
+      {
+        "command": "cude-ai.imageToThree",
+        "title": "Image to 3D (Three.js)",
+        "category": "Cude"
+      },
+      {
+        "command": "cude-ai.indexProjectSemantic",
+        "title": "Cude: Index Project (Semantic)"
+      },
+      {
+        "command": "cude-ai.about",
+        "title": "Cude IDE: About"
+      },
+      {
+        "command": "cude-ai.detectLocalTools",
+        "title": "Cude AI: Detect Local Agent Tools"
+      },
+      {
+        "command": "cude-ai.chat",
+        "title": "Cude AI: Open Chat",
+        "icon": {
+          "light": "media/cude-mark-light.svg",
+          "dark": "media/cude-mark-dark.svg"
+        }
+      },
+      {
+        "command": "cude-ai.cloneAndOwn",
+        "title": "Cude: Clone and Make It Yours"
+      },
+      {
+        "command": "cude-ai.editSelection",
+        "title": "Cude AI: Edit in Editor (Ctrl+I)"
+      },
+      {
+        "command": "cude-ai.toggleInlineCompletion",
+        "title": "Cude: Toggle Tab Completions"
+      },
+      {
+        "command": "cude-ai.acceptInlineEdit",
+        "title": "Cude AI: Accept Inline Edit"
+      },
+      {
+        "command": "cude-ai.rejectInlineEdit",
+        "title": "Cude AI: Reject Inline Edit"
+      },
+      {
+        "command": "cude-ai.retryInlineEdit",
+        "title": "Cude AI: Retry Inline Edit"
+      },
+      {
+        "command": "cude-ai.reviewChanges",
+        "title": "Cude: Review Changes",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "cude-ai.clearReviewComments",
+        "title": "Cude: Clear AI Review Comments"
+      },
+      {
+        "command": "cude-ai.modelCatalog",
+        "title": "Cude: Browse Model Catalog",
+        "icon": "$(library)"
+      },
+      {
+        "command": "cude-ai.updateModelCatalog",
+        "title": "Cude: Update Model Catalog"
+      },
+      {
+        "command": "cude-ai.routerSettings",
+        "title": "Cude: Router Settings"
+      },
+      {
+        "command": "cude-ai.acpPrompt",
+        "title": "Cude AI: Send OpenCode ACP Prompt"
+      },
+      {
+        "command": "cude-ai.importNvidiaCredential",
+        "title": "Cude AI: Import NVIDIA Key from File"
+      },
+      {
+        "command": "cude-ai.configureProvider",
+        "title": "Cude AI: Configure Provider"
+      },
+      {
+        "command": "cude-ai.importProvidersFromEditors",
+        "title": "Cude: Import Providers From Editors"
+      },
+      {
+        "command": "cude-ai.changeLanguage",
+        "title": "Cude: Change Language"
+      },
+      {
+        "command": "cude-ai.spec",
+        "title": "Cude AI: Start Spec"
+      },
+      {
+        "command": "cude-ai.runSpecTask",
+        "title": "Cude AI: Implement Spec Task"
+      },
+      {
+        "command": "cude-ai.agent",
+        "title": "Cude AI: Start Agent Task",
+        "icon": "$(add)"
+      },
+      {
+        "command": "cude-ai.agentManager",
+        "title": "Cude AI: Agent Manager",
+        "icon": "media/agent.svg"
+      },
+      {
+        "command": "cude-ai.toggleAgentsLayout",
+        "title": "Cude: Switch Editor | Agents Layout",
+        "icon": "$(layout)"
+      },
+      {
+        "command": "cude-ai.runApprovedCommand",
+        "title": "Cude AI: Run Command with Approval"
+      },
+      {
+        "command": "cude-ai.memory",
+        "title": "Cude AI: Open Project Memory"
+      },
+      {
+        "command": "cude-ai.saveMemory",
+        "title": "Cude AI: Save Session Summary"
+      },
+      {
+        "command": "cude-ai.mcp",
+        "title": "Cude AI: Inspect MCP Servers"
+      },
+      {
+        "command": "cude-ai.mcpCall",
+        "title": "Cude AI: Run MCP Tool with Approval"
+      },
+      {
+        "command": "cude-ai.chatInEditor",
+        "title": "Cude AI: Open Chat in Editor"
+      },
+      {
+        "command": "cude-ai.clearAgents",
+        "title": "Cude AI: Clear Agent List",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "cude-ai.openAgentSession",
+        "title": "Cude AI: Open Agent Session"
+      },
+      {
+        "command": "cude-ai.newAgentWorktree",
+        "title": "Cude AI: New Agent Worktree",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "cude-ai.skills",
+        "title": "Cude AI: Choose Project Skill"
+      },
+      {
+        "command": "cude-ai.checkSignedUpdate",
+        "title": "Cude: Check for Signed Updates"
+      },
+      {
+        "command": "cude-ai.configureReleaseTrust",
+        "title": "Cude: Configure Release Trust"
+      },
+      {
+        "command": "cude-ai.mcpAddTools",
+        "title": "Cude AI: Add Agent Tools (Browser, MCP)"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "title": "Cude: Update required"
+      },
+      {
+        "command": "cude-ai.openUpdates",
+        "title": "Cude: Updates / Güncellemeler"
+      },
+      {
+        "command": "cude-ai.welcome",
+        "title": "Welcome to Cude IDE",
+        "category": "Cude"
+      },
+      {
+        "command": "cude-ai.introducing",
+        "title": "Introducing Cude IDE",
+        "category": "Cude"
+      },
+      {
+        "command": "cude-ai.connectDesktopApps",
+        "title": "Connect Desktop Apps (Claude Desktop, Codex, Cursor)",
+        "category": "Cude"
+      },
+      {
+        "command": "cude-ai.stopComputer",
+        "title": "Cude: Stop Computer Use"
+      },
+      {
+        "command": "cude-ai.toggleComputerUse",
+        "title": "Cude: Toggle Computer Use"
+      },
+      {
+        "command": "cude-ai.toggleBrowserControl",
+        "title": "Cude: Toggle Browser Control"
+      },
+      {
+        "command": "cude-ai.showDesktopApps",
+        "title": "Cude: Browse Desktop Apps"
+      },
+      {
+        "command": "cude-ai.memoryHealth",
+        "title": "Cude: Memory Health"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cude-ai",
+          "title": "Cude AI",
+          "icon": "media/activity.svg"
+        },
+        {
+          "id": "cude-updates",
+          "title": "Cude Updates",
+          "icon": "media/icons/update.svg"
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "cude-ai-chat",
+          "title": "Cude AI",
+          "icon": "media/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "cude-ai": [
+        {
+          "id": "cude-ai.agents",
+          "name": "Agents"
+        }
+      ],
+      "cude-ai-chat": [
+        {
+          "type": "webview",
+          "id": "cude-ai.chatView",
+          "name": "Cude AI"
+        }
+      ],
+      "cude-updates": [
+        {
+          "type": "webview",
+          "id": "cude-ai.updatesView",
+          "name": "Cude IDE"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Cude AI",
+      "properties": {
+        "cude-ai.android.sdkPath": {
+          "type": "string",
+          "scope": "machine",
+          "default": "",
+          "description": "Path to the Android SDK."
+        },
+        "cude-ai.provider": {
+          "type": "string",
+          "scope": "application",
+          "default": "openai-compatible",
+          "enum": [
+            "openai-compatible",
+            "openai",
+            "anthropic",
+            "gemini",
+            "azure",
+            "nvidia",
+            "openrouter",
+            "ollama",
+            "huggingface-local"
+          ],
+          "description": "AI provider. Credentials are stored in secure system storage."
+        },
+        "cude-ai.baseUrl": {
+          "type": "string",
+          "scope": "application",
+          "default": "",
+          "description": "Provider API base URL; supports HTTPS and local loopback endpoints."
+        },
+        "cude-ai.model": {
+          "type": "string",
+          "scope": "application",
+          "default": "",
+          "description": "Model identifier."
+        },
+        "cude-ai.providers": {
+          "type": "array",
+          "scope": "application",
+          "default": [],
+          "description": "Saved provider profiles; API keys remain in secure system storage."
+        },
+        "cude-ai.localModelDirectory": {
+          "type": "string",
+          "scope": "application",
+          "default": "",
+          "description": "Folder used for locally downloaded GGUF models."
+        },
+        "cude-ai.activeProviderId": {
+          "type": "string",
+          "scope": "application",
+          "default": "",
+          "description": "Currently selected provider profile."
+        },
+        "cude-ai.requestTimeout": {
+          "type": "number",
+          "scope": "application",
+          "default": 120,
+          "minimum": 10,
+          "maximum": 600,
+          "description": "Provider request timeout, seconds."
+        },
+        "cude-ai.language": {
+          "type": "string",
+          "scope": "application",
+          "default": "en",
+          "enum": [
+            "en",
+            "tr"
+          ],
+          "description": "Language used by Cude AI panels."
+        },
+        "cude-ai.inlineCompletion.enabled": {
+          "type": "boolean",
+          "scope": "application",
+          "default": true,
+          "description": "Show Cude AI inline code completions."
+        },
+        "cude-ai.inlineCompletion.providerId": {
+          "type": "string",
+          "scope": "application",
+          "default": "",
+          "description": "Optional provider profile for fast inline completions; empty uses the active provider."
+        },
+        "cude-ai.inlineCompletion.model": {
+          "type": "string",
+          "scope": "application",
+          "default": "",
+          "description": "Optional fast model for inline completions; empty uses the selected provider model."
+        },
+        "cude-ai.router.preference": {
+          "type": "string",
+          "scope": "application",
+          "default": "quality",
+          "enum": [
+            "quality",
+            "speed",
+            "cost"
+          ],
+          "description": "Router preference used when automatic model selection is active."
+        },
+        "cude-ai.router.allowedProviderIds": {
+          "type": "array",
+          "scope": "application",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional provider profile allowlist for Cude Router."
+        },
+        "cude-ai.router.maxDailyTokens": {
+          "type": "number",
+          "scope": "application",
+          "default": 500000,
+          "minimum": 1000,
+          "description": "Local estimated daily token limit for Router requests."
+        },
+        "cude-ai.router.maxDailyCostUsd": {
+          "type": "number",
+          "scope": "application",
+          "default": 20,
+          "minimum": 0,
+          "description": "Local estimated daily spending limit for Router requests."
+        },
+        "cude-ai.router.requestsPerMinute": {
+          "type": "number",
+          "scope": "application",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 600,
+          "description": "Local Router requests per minute limit."
+        },
+        "cude-ai.router.maxDailyRequests": {
+          "type": "number",
+          "scope": "application",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Maximum successful Cude Router requests per day."
+        },
+        "cude-ai.cuets.maxRounds": {
+          "type": "number",
+          "default": 8,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Maximum rounds a long-running Cuets task runs (plan, work, apply, verify, review) before it stops and can be continued."
+        },
+        "cude-ai.cuets.budgetMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 480,
+          "description": "Wall-clock budget in minutes for one Cuets run (time spent waiting for your approval is not counted)."
+        },
+        "cude-ai.localModels.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the local GGUF model manager (download from Hugging Face and run with the bundled llama-server)."
+        },
+        "cude-ai.cliAgents.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Let installed coding CLIs (Codex, Claude Code, OpenCode, Gemini CLI, Qwen Code) appear as chat models. Off by default; turn on in Providers → CLI agents."
+        },
+        "cude-ai.freePool.url": {
+          "type": "string",
+          "default": "",
+          "description": "Norovox Free gateway address (no API key on the device; quotas are enforced by the server)."
+        },
+        "cude-ai.agent.loop": {
+          "type": "boolean",
+          "default": true,
+          "description": "Agent mode works step by step with tools (read, search, edit, run, MCP) and sees each result. Off = one-shot plan."
+        },
+        "cude-ai.agent.maxSteps": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 80,
+          "description": "Maximum tool steps per agent task."
+        },
+        "cude-ai.agent.maxMinutes": {
+          "type": "number",
+          "default": 20,
+          "minimum": 2,
+          "maximum": 120,
+          "description": "Maximum minutes per agent task."
+        },
+        "cude-ai.bridge.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start the Cude desktop bridge on startup so Claude Desktop, Cursor, Windsurf and other MCP apps can use Cude tools (local only)."
+        },
+        "cude-ai.bridge.permission": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "readonly"
+          ],
+          "default": "ask",
+          "description": "What desktop apps may do through the bridge: ask before every edit and command, or read only."
+        },
+        "cude-ai.computer.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Let Cude AI see windows, click and type in desktop apps. Every action asks first; passwords, administrator windows, the lock screen and your own browser are never touched."
+        },
+        "cude-ai.computer.allowedApps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Process names Cude AI may control (empty = any app, still asked each time)."
+        },
+        "cude-ai.browser.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Let Cude AI control a separate Chrome/Edge window with its own Cude profile (never your own profile)."
+        },
+        "cude-ai.autoFallback": {
+          "type": "boolean",
+          "default": true,
+          "description": "When the chosen model is out of quota, retired, needs payment or rejects the key, switch to the next connected model automatically and say so."
+        }
+      }
+    },
+    "themes": [
+      {
+        "label": "Cude Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/cude-dark.json"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "cude-icons",
+        "label": "Cude Icons",
+        "path": "./themes/cude-icons.json"
+      }
+    ],
+    "viewsWelcome": [
+      {
+        "view": "cude-ai.chatView",
+        "contents": "Cude sohbet alanÄ± hazÄ±rlanÄ±yorâ€¦\nMesaj kutusu hazÄ±r olduÄŸunda burada gÃ¶rÃ¼necek."
+      },
+      {
+        "view": "cude-ai.agents",
+        "contents": "No agent tasks yet.\n[New agent task](command:cude-ai.agent)\n[New isolated worktree](command:cude-ai.newAgentWorktree)\n[Choose provider](command:cude-ai.configureProvider)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "cude-ai.chat",
+          "group": "navigation@-100"
+        },
+        {
+          "command": "cude-ai.reviewChanges",
+          "group": "navigation@-95"
+        },
+        {
+          "command": "cude-ai.toggleAgentsLayout",
+          "group": "navigation@-90"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "cude-ai.chat",
+          "when": "view == cude-ai.chatView",
+          "group": "navigation@-2"
+        },
+        {
+          "command": "cude-ai.agentManager",
+          "when": "view == cude-ai.chatView",
+          "group": "navigation@-1"
+        },
+        {
+          "command": "cude-ai.agent",
+          "when": "view == cude-ai.agents",
+          "group": "navigation"
+        },
+        {
+          "command": "cude-ai.clearAgents",
+          "when": "view == cude-ai.agents",
+          "group": "navigation"
+        },
+        {
+          "command": "cude-ai.newAgentWorktree",
+          "when": "view == cude-ai.agents",
+          "group": "navigation"
+        },
+        {
+          "command": "cude-ai.chatInEditor",
+          "when": "view == cude-ai.chatView",
+          "group": "overflow"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "cude-ai.settings",
+        "key": "ctrl+,",
+        "mac": "cmd+,"
+      },
+      {
+        "command": "cude-ai.chat",
+        "key": "ctrl+l",
+        "mac": "cmd+l"
+      },
+      {
+        "command": "cude-ai.agent",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l"
+      },
+      {
+        "command": "cude-ai.toggleAgentsLayout",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a"
+      },
+      {
+        "command": "cude-ai.editSelection",
+        "key": "ctrl+i",
+        "mac": "cmd+i",
+        "when": "editorTextFocus && !editorReadonly"
+      },
+      {
+        "command": "cude-ai.acceptInlineEdit",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && cude.inlineEditActive"
+      },
+      {
+        "command": "cude-ai.rejectInlineEdit",
+        "key": "escape",
+        "when": "editorTextFocus && cude.inlineEditActive"
+      },
+      {
+        "command": "editor.action.inlineSuggest.commit",
+        "key": "tab",
+        "when": "inlineSuggestionVisible && !editorReadonly"
+      },
+      {
+        "command": "editor.action.inlineSuggest.acceptNextWord",
+        "key": "ctrl+right",
+        "mac": "alt+right",
+        "when": "inlineSuggestionVisible && !editorReadonly"
+      },
+      {
+        "command": "editor.action.inlineSuggest.hide",
+        "key": "escape",
+        "when": "inlineSuggestionVisible"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+o",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+s",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+shift+s",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+n",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+shift+n",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+`",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+shift+`",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+shift+b",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "f5",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+f5",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+p",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+tab",
+        "when": "cude.updateLock"
+      },
+      {
+        "command": "cude-ai.updateRequired",
+        "key": "ctrl+shift+tab",
+        "when": "cude.updateLock"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "test": "node --test test/*.test.js",
+    "package": "node build/package.js",
+    "refresh:catalog": "npm run compile && node build/refresh-model-catalog.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1",
+    "undici": "^6.29.1",
+    "yaml": "^2.9.1"
+  }
+}

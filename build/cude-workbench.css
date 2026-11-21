@@ -1,0 +1,916 @@
+/* ===== Cude Workbench — özgün yerleşim ve tasarım katmanı =====
+   Düzen hesaplarını değiştirmez (boyut/margin/splitview yok);
+   yalnız yüzey, köşe, kıl çizgisi, gölge, vurgu ve tipografi. */
+
+.monaco-workbench {
+  --cude-win: #0e0e0d;
+  --cude-card: #161614;
+  --cude-card-2: #1b1b18;
+  --cude-card-hover: #23231f;
+  --cude-hair: rgba(255, 255, 255, 0.08);
+  --cude-hair-strong: rgba(255, 255, 255, 0.14);
+  --cude-text: #ebe8e0;
+  --cude-text-dim: #8d8b83;
+  --cude-accent: #d69b70;
+  --cude-accent-fg: #d69b70;
+  --cude-accent-ink: #1a120c;
+  --cude-accent-soft: rgba(214, 155, 112, 0.14);
+  --cude-accent-ring: rgba(214, 155, 112, 0.24);
+  --cude-hover-bg: rgba(255, 255, 255, 0.06);
+  --cude-active-bg: rgba(255, 255, 255, 0.10);
+  --cude-shadow: 0 18px 48px rgba(0, 0, 0, 0.44);
+  --cude-shadow-sm: 0 10px 28px rgba(0, 0, 0, 0.36);
+  --cude-gap: 5px;
+  --cude-radius: 11px;
+  background-color: var(--cude-win) !important;
+}
+
+/* Açık tema (Light 2026 / Light+ / vs) */
+.monaco-workbench.vs,
+.monaco-workbench.hc-light,
+.monaco-workbench.vs .monaco-workbench {
+  --cude-win: #ecebe7;
+  --cude-card: #fbfbf9;
+  --cude-card-2: #f2f1ec;
+  --cude-card-hover: #e7e5de;
+  --cude-hair: rgba(26, 22, 16, 0.09);
+  --cude-hair-strong: rgba(26, 22, 16, 0.16);
+  --cude-text: #1c1b18;
+  --cude-text-dim: #6f6d65;
+  --cude-accent: #c58250;
+  --cude-accent-fg: #9c5c2d;
+  --cude-accent-ink: #ffffff;
+  --cude-accent-soft: rgba(197, 130, 80, 0.14);
+  --cude-accent-ring: rgba(197, 130, 80, 0.24);
+  --cude-hover-bg: rgba(26, 22, 16, 0.055);
+  --cude-active-bg: rgba(26, 22, 16, 0.095);
+  --cude-shadow: 0 16px 40px rgba(24, 20, 14, 0.14);
+  --cude-shadow-sm: 0 8px 22px rgba(24, 20, 14, 0.10);
+}
+
+/* ===== Pencere zemini: başlık, etkinlik çubuğu, durum çubuğu ===== */
+.monaco-workbench .part.titlebar,
+.monaco-workbench .part.activitybar,
+.monaco-workbench .part.statusbar {
+  background-color: var(--cude-win) !important;
+  border: 0 !important;
+}
+
+/* ===== Ana yüzey kartları: kenar çubuğu, editör, ikincil kenar çubuğu, panel ===== */
+.monaco-workbench .part.sidebar,
+.monaco-workbench .part.auxiliarybar,
+.monaco-workbench .part.editor,
+.monaco-workbench .part.panel {
+  background-color: var(--cude-card) !important;
+  border-radius: var(--cude-radius);
+  outline: var(--cude-gap) solid var(--cude-win);
+  outline-offset: calc(var(--cude-gap) * -1);
+  box-shadow: inset 0 0 0 calc(var(--cude-gap) + 1px) var(--cude-win), inset 0 0 0 calc(var(--cude-gap) + 2px) var(--cude-hair);
+  overflow: hidden;
+}
+
+.monaco-workbench .part.editor > .content,
+.monaco-workbench .part.editor .editor-group-container,
+.monaco-workbench .part.sidebar > .content,
+.monaco-workbench .part.auxiliarybar > .content,
+.monaco-workbench .part.sidebar .pane-body,
+.monaco-workbench .part.sidebar .monaco-list,
+.monaco-workbench .part.sidebar .monaco-list-rows,
+.monaco-workbench .part.sidebar .split-view-view,
+.monaco-workbench .part.sidebar .monaco-pane-view .pane,
+.monaco-workbench .part.auxiliarybar .pane-body,
+.monaco-workbench .part.auxiliarybar .split-view-view,
+.monaco-workbench .part.auxiliarybar .monaco-pane-view .pane,
+.monaco-workbench .part.panel .pane-body,
+.monaco-workbench .part.panel .split-view-view {
+  background-color: transparent !important;
+}
+
+/* Not: .part.editor > .content üzerine dikey padding konulmaz; VS Code webview katmanı yüksekliğini
+   bu öğeden hesapladığı için padding webview'i alt durum çubuğunun üzerine taşırır. */
+.monaco-workbench .sash-container .monaco-sash { opacity: 0; }
+.monaco-workbench .sash-container .monaco-sash:hover { opacity: 1; }
+
+.monaco-workbench .part.sidebar:focus,
+.monaco-workbench .part.sidebar:focus-within,
+.monaco-workbench .part.editor:focus-within,
+.monaco-workbench .part.auxiliarybar:focus-within,
+.monaco-workbench .part.panel:focus-within,
+.monaco-workbench .part:focus {
+  outline-color: var(--cude-win) !important;
+}
+
+/* ===== Bölüm başlıkları (VS Code BÜYÜK HARF yerine sade yazım) ===== */
+.monaco-workbench .part > .title > .title-label h2,
+.monaco-workbench .pane-header .title,
+.monaco-workbench .composite.title .title-label h2,
+.monaco-workbench .part.auxiliarybar > .title .composite-bar .action-label,
+.monaco-workbench .part.panel > .title .composite-bar .action-label {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.monaco-workbench .pane-header {
+  text-transform: none !important;
+  background: transparent !important;
+  border-top-color: var(--cude-hair) !important;
+}
+
+.monaco-workbench .part.sidebar > .title,
+.monaco-workbench .part.auxiliarybar > .title {
+  padding-left: 14px !important;
+}
+
+/* İkincil kenar çubuğu (Cude AI) ve alt panel sekmeleri */
+.monaco-workbench .part.auxiliarybar > .title .composite-bar .action-item .action-label,
+.monaco-workbench .part.panel > .title .composite-bar .action-item .action-label {
+  border-radius: 7px !important;
+  padding: 3px 9px !important;
+  border-bottom: 0 !important;
+  transition: background-color 0.14s, color 0.14s;
+}
+
+.monaco-workbench .part.auxiliarybar > .title .composite-bar .action-item:hover .action-label,
+.monaco-workbench .part.panel > .title .composite-bar .action-item:hover .action-label {
+  background-color: var(--cude-hover-bg) !important;
+}
+
+.monaco-workbench .part.auxiliarybar > .title .composite-bar .action-item.checked .action-label,
+.monaco-workbench .part.panel > .title .composite-bar .action-item.checked .action-label {
+  background-color: var(--cude-card-2) !important;
+  box-shadow: inset 0 0 0 1px var(--cude-hair);
+}
+
+.monaco-workbench .part.auxiliarybar > .title .composite-bar .active-item-indicator::before,
+.monaco-workbench .part.panel > .title .composite-bar .active-item-indicator::before {
+  border-top-color: transparent !important;
+  border-bottom-color: var(--cude-accent) !important;
+  border-radius: 2px;
+}
+
+/* ===== Başlık çubuğu ve komut merkezi ===== */
+.monaco-workbench .part.titlebar .command-center .agent-status-pill,
+.monaco-workbench .part.titlebar .command-center .action-item.command-center-center {
+  border-radius: 9px !important;
+  background: var(--cude-card) !important;
+  border: 1px solid var(--cude-hair) !important;
+  transition: background-color 0.14s, border-color 0.14s;
+}
+
+.monaco-workbench .part.titlebar .command-center .action-item.command-center-center:hover {
+  background: var(--cude-card-2) !important;
+  border-color: var(--cude-hair-strong) !important;
+}
+
+.monaco-workbench .part.titlebar .menubar-menu-button {
+  border-radius: 6px !important;
+  transition: background-color 0.12s;
+}
+
+.monaco-workbench .part.titlebar .menubar-menu-button:hover,
+.monaco-workbench .part.titlebar .menubar-menu-button.open {
+  background-color: var(--cude-hover-bg) !important;
+}
+
+/* ===== Etkinlik çubuğu ===== */
+.monaco-workbench .activitybar > .content .monaco-action-bar .action-item .action-label {
+  border-radius: 9px;
+  margin: 2px 6px;
+  transition: background-color 0.14s, color 0.14s;
+}
+
+.monaco-workbench .activitybar > .content .monaco-action-bar .action-item:hover .action-label {
+  background-color: var(--cude-hover-bg);
+}
+
+.monaco-workbench .activitybar > .content .monaco-action-bar .action-item.checked .action-label {
+  background-color: var(--cude-active-bg);
+}
+
+.monaco-workbench .activitybar > .content .monaco-action-bar .action-item .active-item-indicator::before {
+  border-left-width: 0 !important;
+}
+
+.monaco-workbench .activitybar > .content .monaco-action-bar .action-item.checked .active-item-indicator::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 3px;
+  background: var(--cude-accent);
+}
+
+/* ===== Editör sekmeleri: tutarlı hap biçimi, çizgisiz ===== */
+.monaco-workbench .part.editor .title {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.monaco-workbench .part.editor .tabs-container {
+  background: transparent !important;
+  gap: 3px;
+  padding: 5px 6px 0 6px;
+}
+
+.monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab {
+  border: 0 !important;
+  border-radius: 8px !important;
+  margin-top: 0;
+  height: 28px !important;
+  background: transparent !important;
+  color: var(--cude-text-dim);
+  transition: background-color 0.14s, color 0.14s;
+}
+
+.monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab.active {
+  background: var(--cude-card-2) !important;
+  color: var(--vscode-tab-activeForeground) !important;
+  box-shadow: inset 0 0 0 1px var(--cude-hair);
+}
+
+.monaco-workbench .part.editor > .content .editor-group-container > .title .tabs-container > .tab:hover {
+  background: var(--cude-card-2) !important;
+}
+
+.monaco-workbench .part.editor .title .tabs-container > .tab .tab-border-top-container,
+.monaco-workbench .part.editor .title .tabs-container > .tab .tab-border-bottom-container {
+  display: none !important;
+}
+
+.monaco-workbench .part.editor .title .tabs-container > .tab .tab-actions .action-label {
+  border-radius: 5px !important;
+}
+
+.monaco-workbench .part.editor .title .editor-actions { padding-right: 6px; }
+.monaco-workbench .part.editor .editor-group-watermark .letterpress { opacity: 0.55; }
+
+/* Breadcrumbs */
+.monaco-workbench .part.editor .breadcrumbs-control {
+  background: transparent !important;
+}
+.monaco-workbench .part.editor .breadcrumbs-control .monaco-breadcrumb-item {
+  border-radius: 5px;
+}
+
+/* ===== Durum çubuğu ===== */
+.monaco-workbench .part.statusbar {
+  color: var(--cude-text-dim) !important;
+}
+
+.monaco-workbench .part.statusbar .statusbar-item .statusbar-item-label {
+  border-radius: 6px !important;
+  padding: 0 7px !important;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.monaco-workbench .part.statusbar .statusbar-item .statusbar-item-label:hover {
+  background-color: var(--cude-hover-bg) !important;
+}
+
+.monaco-workbench .part.statusbar .statusbar-item.has-background-color,
+.monaco-workbench .part.statusbar .statusbar-item.restricted-mode-item {
+  background: transparent !important;
+  color: var(--cude-text-dim) !important;
+  border-radius: 6px;
+}
+
+.monaco-workbench .part.statusbar .statusbar-item.restricted-mode-item a {
+  color: var(--cude-accent-fg) !important;
+}
+
+/* ===== Üst bant (Kısıtlı mod vb.) ===== */
+.monaco-workbench .banner {
+  background: var(--cude-card-2) !important;
+  color: var(--cude-text-dim) !important;
+  border-bottom: 1px solid var(--cude-hair) !important;
+}
+
+.monaco-workbench .banner .icon-container .codicon {
+  color: var(--cude-accent-fg) !important;
+}
+
+.monaco-workbench .banner .message-actions-container a.monaco-link {
+  color: var(--cude-accent-fg) !important;
+  text-decoration: none !important;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--cude-accent-soft);
+  transition: background-color 0.14s;
+}
+
+.monaco-workbench .banner .message-actions-container a.monaco-link:hover {
+  background: var(--cude-accent-ring);
+}
+
+/* ===== Liste, ağaç ve eylem ikonları ===== */
+.monaco-workbench .monaco-list .monaco-list-row { border-radius: 6px; }
+.monaco-workbench .part.sidebar .monaco-list .monaco-list-row { margin: 0 6px; width: calc(100% - 12px) !important; }
+.monaco-workbench .part.sidebar .monaco-list .monaco-scrollable-element > .shadow { display: none; }
+
+.monaco-workbench .monaco-action-bar .action-label.codicon,
+.monaco-workbench .monaco-toolbar .action-label.codicon {
+  border-radius: 6px !important;
+  transition: background-color 0.12s;
+}
+
+/* Kaydırma çubukları */
+.monaco-workbench .monaco-scrollable-element > .scrollbar > .slider { border-radius: 6px; }
+
+/* ===== Tüm düğmeler (Cude tasarımı, koyu & açık tema uyumlu) ===== */
+.monaco-workbench .monaco-button {
+  border-radius: 8px !important;
+  padding: 5px 14px !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: background-color 0.14s, border-color 0.14s, box-shadow 0.14s, transform 0.05s;
+}
+
+.monaco-workbench .monaco-button:active { transform: translateY(1px); }
+
+.monaco-workbench .monaco-button:not(.secondary):not(.monaco-text-button-with-description):not(.disabled) {
+  background: var(--cude-accent) !important;
+  color: var(--cude-accent-ink) !important;
+  border: 0 !important;
+}
+
+.monaco-workbench .monaco-button:not(.secondary):not(.monaco-text-button-with-description):not(.disabled):hover {
+  filter: brightness(1.07);
+}
+
+.monaco-workbench .monaco-button.secondary {
+  background: var(--cude-card-2) !important;
+  color: var(--cude-text) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+}
+
+.monaco-workbench .monaco-button.secondary:hover {
+  background: var(--cude-card-hover) !important;
+  border-color: var(--cude-hair-strong) !important;
+}
+
+.monaco-workbench .monaco-button-dropdown > .monaco-button:first-child {
+  border-radius: 8px 0 0 8px !important;
+}
+
+.monaco-workbench .monaco-button-dropdown > .monaco-button:last-child {
+  border-radius: 0 8px 8px 0 !important;
+  padding: 5px 8px !important;
+}
+
+.monaco-workbench .monaco-button-dropdown > .monaco-button-dropdown-separator {
+  background-color: var(--cude-hair) !important;
+}
+
+.monaco-workbench .extensions-viewlet .monaco-button-dropdown > .monaco-button {
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+}
+
+.monaco-workbench .monaco-button:focus-visible {
+  outline: 2px solid var(--cude-accent-ring) !important;
+  outline-offset: 2px;
+}
+
+/* Bağlantılar ve eşleşme vurguları (VS Code mavisinin yerine Cude vurgusu) */
+.monaco-workbench .monaco-highlighted-label .highlight,
+.monaco-workbench .monaco-list .monaco-list-row .monaco-highlighted-label .highlight,
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row .monaco-highlighted-label .highlight,
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row.focused .monaco-highlighted-label .highlight {
+  color: var(--cude-accent-fg) !important;
+}
+
+.monaco-workbench a.monaco-link,
+.monaco-workbench .workspace-trust-editor a,
+.monaco-workbench .keybindings-editor .monaco-list-row .keybinding-source-extension {
+  color: var(--cude-accent-fg) !important;
+}
+
+/* ===== Metin alanları, açılır listeler, onay kutuları ===== */
+.monaco-workbench .monaco-inputbox {
+  border-radius: 8px !important;
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair) !important;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.monaco-workbench .monaco-inputbox.synthetic-focus,
+.monaco-workbench .monaco-inputbox:focus-within {
+  border-color: var(--cude-accent) !important;
+  box-shadow: 0 0 0 3px var(--cude-accent-soft) !important;
+  outline: 0 !important;
+}
+
+.monaco-workbench .monaco-inputbox > .ibwrapper > .input,
+.monaco-workbench .monaco-inputbox > .ibwrapper > textarea {
+  padding-left: 10px !important;
+}
+
+.monaco-workbench select.monaco-select-box,
+.monaco-workbench .monaco-select-box {
+  border-radius: 8px !important;
+  background-color: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair) !important;
+  padding: 4px 10px !important;
+}
+
+.monaco-workbench .monaco-select-box-dropdown-container {
+  border-radius: 10px !important;
+  overflow: hidden;
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  box-shadow: var(--cude-shadow-sm) !important;
+}
+
+.monaco-workbench .monaco-select-box-dropdown-container .monaco-list-row {
+  border-radius: 6px;
+}
+
+.monaco-workbench .monaco-custom-toggle.monaco-checkbox {
+  border-radius: 5px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  background: var(--cude-card-2) !important;
+  transition: background-color 0.14s, border-color 0.14s;
+}
+
+.monaco-workbench .monaco-custom-toggle.monaco-checkbox.checked {
+  background: var(--cude-accent) !important;
+  border-color: var(--cude-accent) !important;
+  color: var(--cude-accent-ink) !important;
+}
+
+/* ===== Komut Paleti / Quick Input ===== */
+.monaco-workbench .quick-input-widget {
+  background: var(--cude-card) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 13px !important;
+  overflow: hidden;
+  box-shadow: var(--cude-shadow) !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-titlebar {
+  background: var(--cude-card-2) !important;
+  border-bottom: 1px solid var(--cude-hair) !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-header {
+  padding: 8px 10px 6px !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-list {
+  padding: 4px 6px 6px !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row {
+  border-radius: 7px !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row.focused {
+  background: var(--cude-accent-soft) !important;
+  color: var(--cude-text) !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row.focused .label-name,
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row.focused .label-description,
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row.focused .monaco-keybinding-key,
+.monaco-workbench .quick-input-widget .quick-input-list .monaco-list-row.focused .codicon {
+  color: var(--cude-text) !important;
+}
+
+.monaco-workbench .quick-input-widget .quick-input-list .quick-input-list-separator-border {
+  border-top-color: var(--cude-hair) !important;
+}
+
+/* ===== Bağlam menüleri ve dişli (Manage) menüsü ===== */
+.monaco-workbench .context-view .monaco-menu-container,
+.monaco-menu-container {
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 10px !important;
+  padding: 4px !important;
+  box-shadow: var(--cude-shadow-sm) !important;
+}
+
+.monaco-menu-container .monaco-action-bar.vertical .action-item .action-menu-item {
+  border-radius: 6px !important;
+}
+
+.monaco-menu-container .monaco-action-bar.vertical .action-label.separator {
+  border-bottom-color: var(--cude-hair) !important;
+}
+
+/* Hover / Tooltip kutuları */
+.monaco-workbench .workbench-hover,
+.monaco-workbench .monaco-hover {
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 9px !important;
+  box-shadow: var(--cude-shadow-sm) !important;
+}
+
+/* ===== Bildirimler (Toasts & Notification Center) ===== */
+.monaco-workbench .notifications-toasts .notification-toast {
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 11px !important;
+  overflow: hidden;
+  box-shadow: var(--cude-shadow-sm) !important;
+}
+
+.monaco-workbench .notifications-center {
+  background: var(--cude-card) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: var(--cude-shadow) !important;
+}
+
+.monaco-workbench .notifications-center-header {
+  background: var(--cude-card-2) !important;
+  border-bottom: 1px solid var(--cude-hair) !important;
+}
+
+.monaco-workbench .notification-list-item .monaco-progress-container .progress-bit {
+  background-color: var(--cude-accent) !important;
+}
+
+/* ===== Diyaloglar ve Modal yüzeyler ===== */
+.monaco-workbench .monaco-dialog-modal-block.dimmed {
+  background: rgba(0, 0, 0, 0.48) !important;
+  backdrop-filter: blur(3px);
+}
+
+.monaco-workbench .monaco-dialog-box,
+.monaco-workbench .modal-editor-part,
+.monaco-workbench .editor-modal-part {
+  background: var(--cude-card) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: var(--cude-shadow) !important;
+}
+
+.monaco-workbench .monaco-dialog-box .dialog-buttons-row .monaco-button {
+  min-width: 84px;
+}
+
+/* Çalışma Alanı Güveni (Workspace Trust) ekranı */
+.monaco-workbench .workspace-trust-editor {
+  background: var(--cude-card) !important;
+}
+
+.monaco-workbench .workspace-trust-editor .workspace-trust-header {
+  background: var(--cude-card-2) !important;
+  border-bottom: 1px solid var(--cude-hair) !important;
+  border-radius: 12px;
+}
+
+.monaco-workbench .workspace-trust-editor .workspace-trust-limitations .limitations-container {
+  border-radius: 12px !important;
+  border: 1px solid var(--cude-hair) !important;
+  background: var(--cude-card-2) !important;
+}
+
+/* ===== Ayarlar düzenleyicisi ===== */
+.monaco-workbench .settings-editor {
+  background: var(--cude-card) !important;
+}
+
+.monaco-workbench .settings-editor > .settings-header {
+  padding-top: 18px !important;
+}
+
+.monaco-workbench .settings-editor > .settings-header > .search-container > .settings-search-input > .monaco-inputbox,
+.monaco-workbench .settings-editor > .settings-header > .search-container > .settings-search-input > .suggest-input-container {
+  border-radius: 10px !important;
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair) !important;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+
+.monaco-workbench .settings-editor > .settings-header > .search-container > .settings-search-input > .suggest-input-container.synthetic-focus,
+.monaco-workbench .settings-editor > .settings-header > .search-container > .settings-search-input > .suggest-input-container:focus-within {
+  border-color: var(--cude-accent) !important;
+  box-shadow: 0 0 0 3px var(--cude-accent-soft) !important;
+  outline: 0 !important;
+}
+
+.monaco-workbench .settings-editor > .settings-header .settings-tabs-widget .action-label {
+  border-radius: 8px 8px 0 0;
+  padding: 6px 12px !important;
+}
+
+.monaco-workbench .settings-editor > .settings-header .settings-tabs-widget .action-item .action-label.checked {
+  color: var(--cude-accent-fg) !important;
+  border-bottom-color: var(--cude-accent) !important;
+}
+
+.monaco-workbench .settings-editor .settings-toc-container .monaco-list-row {
+  border-radius: 7px;
+}
+
+.monaco-workbench .settings-editor .settings-toc-container .monaco-list-row.selected {
+  color: var(--cude-accent-fg) !important;
+  background: var(--cude-accent-soft) !important;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-contents {
+  border-radius: 10px;
+  padding: 12px 14px 16px !important;
+  margin: 3px 0;
+  border: 1px solid transparent;
+  transition: background-color 0.14s, border-color 0.14s;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .monaco-list-row:hover .setting-item-contents,
+.monaco-workbench .settings-editor .settings-tree-container .monaco-list-row.focused .setting-item-contents {
+  background: var(--cude-card-2) !important;
+  border-color: var(--cude-hair) !important;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .monaco-list-row .setting-item-contents.is-configured .setting-item-modified-indicator {
+  border-color: var(--cude-accent) !important;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-category {
+  color: var(--cude-text-dim);
+  font-weight: 500;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-label {
+  font-weight: 600;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .settings-group-title-label {
+  font-size: 20px !important;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  padding-top: 18px !important;
+}
+
+.monaco-workbench .settings-editor .setting-list-widget .setting-list-row {
+  border-radius: 6px;
+}
+
+.monaco-workbench .settings-editor .edit-in-settings-button,
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-description a,
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-markdown a {
+  color: var(--cude-accent-fg) !important;
+}
+
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-description code,
+.monaco-workbench .settings-editor .settings-tree-container .setting-item-markdown code {
+  border-radius: 5px;
+  padding: 1px 5px;
+  background: var(--cude-card-2);
+  border: 1px solid var(--cude-hair);
+}
+
+/* ===== Uzantılar (Extensions viewlet & editor) ===== */
+.monaco-workbench .extensions-viewlet .monaco-list-row {
+  border-radius: 8px !important;
+}
+
+.monaco-workbench .extensions-viewlet .extension-list-item .icon-container .icon {
+  border-radius: 8px;
+}
+
+.monaco-workbench .extensions-viewlet .extension-list-item .extension-action.label,
+.monaco-workbench .extension-editor .header .details .actions .action-label.extension-action {
+  border-radius: 7px !important;
+  padding: 3px 10px !important;
+  font-weight: 500;
+  border: 1px solid var(--cude-hair) !important;
+  background: var(--cude-card-2) !important;
+  color: var(--cude-text) !important;
+  transition: background-color 0.14s, filter 0.14s;
+}
+
+.monaco-workbench .extensions-viewlet .extension-list-item .extension-action.label.prominent,
+.monaco-workbench .extension-editor .header .details .actions .action-label.extension-action.prominent {
+  background: var(--cude-accent) !important;
+  color: var(--cude-accent-ink) !important;
+  border-color: transparent !important;
+}
+
+.monaco-workbench .extensions-viewlet .extension-list-item .extension-action.label.prominent:hover,
+.monaco-workbench .extension-editor .header .details .actions .action-label.extension-action.prominent:hover {
+  filter: brightness(1.07);
+}
+
+.monaco-workbench .extension-editor {
+  background: var(--cude-card) !important;
+}
+
+.monaco-workbench .extension-editor > .header {
+  border-bottom: 1px solid var(--cude-hair) !important;
+}
+
+/* ===== Klavye kısayolları (Keybindings editor) ===== */
+.monaco-workbench .keybindings-editor {
+  background: var(--cude-card) !important;
+}
+
+.monaco-workbench .keybindings-editor .keybindings-header {
+  padding-top: 14px !important;
+}
+
+.monaco-workbench .keybindings-editor .monaco-table-th {
+  color: var(--cude-text-dim) !important;
+  font-weight: 600;
+  border-bottom: 1px solid var(--cude-hair) !important;
+}
+
+.monaco-workbench .keybindings-editor .monaco-list-row {
+  border-radius: 7px !important;
+}
+
+.monaco-workbench .monaco-keybinding > .monaco-keybinding-key {
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  box-shadow: inset 0 -1px 0 var(--cude-hair) !important;
+  font-size: 11px !important;
+}
+
+/* ===== Editör içi Bul/Değiştir (Find widget) ===== */
+.monaco-workbench .editor-widget.find-widget {
+  background: var(--cude-card-2) !important;
+  border: 1px solid var(--cude-hair-strong) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--cude-shadow-sm) !important;
+}
+
+.monaco-workbench .editor-widget.find-widget .monaco-custom-toggle {
+  border-radius: 5px !important;
+}
+
+/* ===== Rozetler ve ilerleme çubuğu ===== */
+.monaco-workbench .badge .badge-content,
+.monaco-workbench .monaco-count-badge {
+  border-radius: 999px !important;
+}
+
+.monaco-workbench .monaco-progress-container .progress-bit {
+  background-color: var(--cude-accent) !important;
+}
+
+/* ===== Zorunlu güncelleme kilidi (dokunulmaz) ===== */
+/* The update editor is the sole surface beneath the native window controls. */
+body.cude-update-lock .monaco-workbench::after { content:''; position:fixed; inset:35px 0 0; background:rgba(0,0,0,.72); z-index:9998; pointer-events:auto; }
+body.cude-update-lock .monaco-workbench .part.editor { position:fixed!important; inset:35px 0 0!important; width:100vw!important; height:calc(100vh - 35px)!important; z-index:9999!important; }
+body.cude-update-lock .part.editor .title { pointer-events:none; }
+body.cude-update-lock .part.titlebar { z-index:10000!important; }
+
+body.cude-update-lock .part.editor .tabs-and-actions-container, body.cude-update-lock .part.editor .breadcrumbs-control { display:none!important; }
+
+/* ===== Claude 20 Kas — HATA-C3 / HATA-C9 ===== */
+/* C3: boş editör filigranında kısayol etiketleri tek satır */
+.monaco-workbench .part.editor .editor-group-watermark .shortcuts dl { display: flex !important; align-items: center; justify-content: space-between; gap: 12px; }
+.monaco-workbench .part.editor .editor-group-watermark .shortcuts dt { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
+.monaco-workbench .part.editor .editor-group-watermark .shortcuts dd { white-space: nowrap !important; flex: 0 0 auto; }
+/* C9: modal düzenleyiciler (Workspace Trust, Ayarlar) ekrana sığsın, içerik kaydırılabilsin */
+.monaco-workbench .modal-editor-part, .monaco-workbench .editor-modal-part { max-height: calc(100vh - 56px) !important; }
+.monaco-workbench .workspace-trust-editor { overflow-y: auto !important; max-height: 100% !important; }
+.monaco-workbench .workspace-trust-editor .workspace-trust-features { flex-wrap: wrap; }
+.monaco-workbench .part.editor .editor-group-watermark { max-width: none !important; }
+.monaco-workbench .part.editor .editor-group-watermark .shortcuts { width: max-content !important; max-width: calc(100% - 24px); margin: 0 auto; }
+.monaco-workbench .part.editor .editor-group-watermark .shortcuts dt { overflow: visible !important; text-overflow: clip !important; }
+
+/* Light themes: Cude copper focus/selection accents instead of upstream blue */
+.monaco-workbench.vs,.monaco-workbench.hc-light{--vscode-focusBorder:#b8713f!important;--vscode-textLink-foreground:#9a5a2e!important;--vscode-textLink-activeForeground:#8a4a1f!important;--vscode-button-background:#c58250!important;--vscode-button-hoverBackground:#b8713f!important;--vscode-button-foreground:#1a120c!important;--vscode-progressBar-background:#c58250!important;--vscode-activityBarBadge-background:#c58250!important;--vscode-badge-background:#ead7c6!important;--vscode-checkbox-selectBackground:#c58250!important}
+
+.monaco-workbench.vs,.monaco-workbench.hc-light{--vscode-list-activeSelectionBackground:#f1e3d6!important;--vscode-list-activeSelectionForeground:#23231f!important;--vscode-list-inactiveSelectionBackground:#f3ece5!important;--vscode-list-focusOutline:#b8713f!important;--vscode-list-focusAndSelectionOutline:#b8713f!important;--vscode-list-highlightForeground:#9a5a2e!important;--vscode-list-focusHighlightForeground:#9a5a2e!important;--vscode-quickInputList-focusBackground:#f1e3d6!important;--vscode-quickInputList-focusForeground:#23231f!important;--vscode-pickerGroup-foreground:#9a5a2e!important;--vscode-inputOption-activeBorder:#b8713f!important;--vscode-inputOption-activeBackground:#f1e3d6!important;--vscode-tab-activeBorderTop:#c58250!important;--vscode-tab-activeBorder:#c58250!important;--vscode-activityBar-activeBorder:#c58250!important;--vscode-panelTitle-activeBorder:#c58250!important;--vscode-settings-modifiedItemIndicator:#c58250!important;--vscode-editorLink-activeForeground:#9a5a2e!important;--vscode-notificationLink-foreground:#9a5a2e!important;--vscode-statusBarItem-remoteBackground:#c58250!important;--vscode-statusBarItem-remoteForeground:#1a120c!important;--vscode-toolbar-activeBackground:#f1e3d6!important;--vscode-checkbox-selectBorder:#b8713f!important;--vscode-radio-activeBackground:#f1e3d6!important;--vscode-radio-activeBorder:#b8713f!important;--vscode-menu-selectionBackground:#f1e3d6!important;--vscode-menu-selectionForeground:#23231f!important;--vscode-editorSuggestWidget-highlightForeground:#9a5a2e!important;--vscode-editorSuggestWidget-selectedBackground:#f1e3d6!important;--vscode-scmGraph-historyItemRefColor:#c58250!important;--vscode-gauge-foreground:#c58250!important;--vscode-sash-hoverBorder:#c58250!important;--vscode-keybindingLabel-border:#d8cfc4!important}
+
+/* Cude Updates: pinned just above the Accounts (profile) icon, animated when an update waits */
+.monaco-workbench .part.activitybar>.content{display:flex!important;flex-direction:column!important}
+.monaco-workbench .part.activitybar>.content>.composite-bar{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:0}
+.monaco-workbench .part.activitybar>.content>.composite-bar>.monaco-action-bar{flex:1 1 auto;display:flex;flex-direction:column}
+.monaco-workbench .part.activitybar>.content>.composite-bar>.monaco-action-bar>.actions-container{flex:1 1 auto;display:flex!important;flex-direction:column!important;height:100%}
+.monaco-workbench .part.activitybar .composite-bar .action-item:has(> .action-label[aria-label^="Cude Updates"]){margin-top:auto!important;order:99}
+.monaco-workbench .part.activitybar .action-item:has(> .action-label[aria-label^="Cude Updates"]) .action-label{transition:color .2s,transform .35s cubic-bezier(.2,.8,.2,1)}
+.monaco-workbench .part.activitybar .action-item:has(> .action-label[aria-label^="Cude Updates"]):hover .action-label{transform:rotate(-28deg);color:#d69b70!important;background-color:#d69b70!important}
+.monaco-workbench .part.activitybar .action-item:has(> .action-label[aria-label^="Cude Updates"]):has(.badge .badge-content:not(:empty)) .action-label{animation:cudeUpdatePulse 2.4s ease-in-out infinite;background-color:#d69b70!important}
+.monaco-workbench .part.activitybar .action-item:has(> .action-label[aria-label^="Cude Updates"]) .badge .badge-content{background:#d69b70!important;color:#1a120c!important;animation:cudeBadgePop 2.4s ease-in-out infinite}
+@keyframes cudeUpdatePulse{0%,100%{transform:translateY(0);opacity:1}45%{transform:translateY(-2px);opacity:.75}60%{transform:translateY(1px);opacity:1}}
+@keyframes cudeBadgePop{0%,100%{box-shadow:0 0 0 0 rgba(214,155,112,.55)}50%{box-shadow:0 0 0 5px rgba(214,155,112,0)}}
+@media (prefers-reduced-motion:reduce){.monaco-workbench .part.activitybar .action-item:has(> .action-label[aria-label^="Cude Updates"]) .action-label,.monaco-workbench .part.activitybar .action-item:has(> .action-label[aria-label^="Cude Updates"]) .badge .badge-content{animation:none!important;transition:none!important}}
+
+/* Activity bar: every icon moves (hover lift, press, active slide-in) */
+.monaco-workbench .part.activitybar .action-item .action-label{transition:transform .22s cubic-bezier(.2,.8,.2,1),color .2s,background-color .2s,opacity .2s!important}
+.monaco-workbench .part.activitybar .action-item:hover .action-label{transform:translateY(-1px) scale(1.08)}
+.monaco-workbench .part.activitybar .action-item:active .action-label{transform:scale(.92)}
+.monaco-workbench .part.activitybar .action-item.checked .active-item-indicator::before{animation:cudeIndicator .28s cubic-bezier(.2,.8,.2,1)}
+.monaco-workbench .part.activitybar .action-item.checked .action-label{animation:cudeActivate .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes cudeIndicator{from{transform:scaleY(.2);opacity:.2}to{transform:scaleY(1);opacity:1}}
+@keyframes cudeActivate{0%{transform:scale(.9)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+/* Explorer folder/file icons: gentle pop when a folder opens */
+.monaco-workbench .explorer-folders-view .monaco-list-row .monaco-icon-label.folder-icon.expanded::before{animation:cudeFolderOpen .25s cubic-bezier(.2,.8,.2,1)}
+@keyframes cudeFolderOpen{from{transform:scale(.85) rotate(-6deg)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.monaco-workbench .part.activitybar .action-item .action-label,.monaco-workbench .part.activitybar .action-item .active-item-indicator::before,.monaco-workbench .explorer-folders-view .monaco-icon-label::before{animation:none!important;transition:none!important}}
+
+/* Light workbench surfaces: cover inner widgets as well as their containers. */
+.monaco-workbench.vs, .monaco-workbench.hc-light {
+  --cude-accent:#b8632f; --cude-accent-fg:#91471f; --cude-accent-ink:#090604;
+  --cude-text-dim:#55594f;
+  --cude-hair:#b3b1a8; --cude-hair-strong:#7b8073;
+  --cude-accent-soft:#f1e3d6; --cude-accent-ring:#b8632f;
+  --vscode-foreground:var(--cude-text)!important;
+  --vscode-descriptionForeground:var(--cude-text-dim)!important;
+  --vscode-disabledForeground:var(--cude-text-dim)!important;
+  --vscode-menu-background:var(--cude-card-2)!important;
+  --vscode-menu-foreground:var(--cude-text)!important;
+  --vscode-menu-border:var(--cude-hair-strong)!important;
+  --vscode-menu-separatorBackground:var(--cude-hair)!important;
+  --vscode-quickInput-background:var(--cude-card)!important;
+  --vscode-quickInput-foreground:var(--cude-text)!important;
+  --vscode-quickInputTitle-background:var(--cude-card-2)!important;
+  --vscode-editorHoverWidget-background:var(--cude-card-2)!important;
+  --vscode-editorHoverWidget-foreground:var(--cude-text)!important;
+  --vscode-editorHoverWidget-border:var(--cude-hair-strong)!important;
+  --vscode-editorHoverWidget-statusBarBackground:var(--cude-card)!important;
+  --vscode-notifications-background:var(--cude-card-2)!important;
+  --vscode-notifications-foreground:var(--cude-text)!important;
+  --vscode-notifications-border:var(--cude-hair-strong)!important;
+  --vscode-notificationCenterHeader-background:var(--cude-card-2)!important;
+  --vscode-notificationCenterHeader-foreground:var(--cude-text)!important;
+  --vscode-input-background:var(--cude-card-2)!important;
+  --vscode-input-foreground:var(--cude-text)!important;
+  --vscode-input-placeholderForeground:var(--cude-text-dim)!important;
+  --vscode-input-border:var(--cude-hair-strong)!important;
+  --vscode-dropdown-background:var(--cude-card-2)!important;
+  --vscode-dropdown-foreground:var(--cude-text)!important;
+  --vscode-dropdown-border:var(--cude-hair-strong)!important;
+  --vscode-dropdown-listBackground:var(--cude-card-2)!important;
+  --vscode-settings-headerForeground:var(--cude-text)!important;
+  --vscode-settings-textInputBackground:var(--cude-card-2)!important;
+  --vscode-settings-textInputForeground:var(--cude-text)!important;
+  --vscode-settings-numberInputBackground:var(--cude-card-2)!important;
+  --vscode-settings-numberInputForeground:var(--cude-text)!important;
+  --vscode-settings-dropdownBackground:var(--cude-card-2)!important;
+  --vscode-settings-dropdownForeground:var(--cude-text)!important;
+  --vscode-settings-checkboxBackground:var(--cude-card-2)!important;
+  --vscode-settings-checkboxForeground:var(--cude-text)!important;
+  --vscode-settings-focusedRowBackground:var(--cude-card-2)!important;
+  --vscode-settings-rowHoverBackground:var(--cude-card-2)!important;
+  --vscode-settings-focusedRowBorder:var(--cude-accent)!important;
+  --vscode-focusBorder:var(--cude-accent)!important;
+  --vscode-textLink-foreground:var(--cude-accent-fg)!important;
+  --vscode-textLink-activeForeground:var(--cude-accent-fg)!important;
+  --vscode-notificationLink-foreground:var(--cude-accent-fg)!important;
+  --vscode-notificationsInfoIcon-foreground:var(--cude-accent-fg)!important;
+  --vscode-editorInfo-foreground:var(--cude-accent-fg)!important;
+  --vscode-button-background:var(--cude-accent)!important;
+  --vscode-button-hoverBackground:var(--cude-accent)!important;
+  --vscode-button-foreground:var(--cude-accent-ink)!important;
+  --vscode-button-secondaryBackground:var(--cude-card-2)!important;
+  --vscode-button-secondaryForeground:var(--cude-text)!important;
+  --vscode-button-secondaryHoverBackground:var(--cude-card-hover)!important;
+  --vscode-progressBar-background:var(--cude-accent)!important;
+  --vscode-menu-selectionBackground:var(--cude-accent-soft)!important;
+  --vscode-menu-selectionForeground:var(--cude-text)!important;
+  --vscode-menu-selectionBorder:var(--cude-accent)!important;
+  --vscode-list-activeSelectionBackground:var(--cude-accent-soft)!important;
+  --vscode-list-activeSelectionForeground:var(--cude-text)!important;
+  --vscode-list-inactiveSelectionBackground:var(--cude-card-2)!important;
+  --vscode-list-inactiveSelectionForeground:var(--cude-text)!important;
+  --vscode-list-focusBackground:var(--cude-accent-soft)!important;
+  --vscode-list-focusForeground:var(--cude-text)!important;
+  --vscode-list-hoverBackground:var(--cude-card-hover)!important;
+  --vscode-list-hoverForeground:var(--cude-text)!important;
+  --vscode-list-focusOutline:var(--cude-accent)!important;
+  --vscode-list-focusAndSelectionOutline:var(--cude-accent)!important;
+  --vscode-list-highlightForeground:var(--cude-accent-fg)!important;
+  --vscode-list-focusHighlightForeground:var(--cude-accent-fg)!important;
+  --vscode-quickInputList-focusBackground:var(--cude-accent-soft)!important;
+  --vscode-quickInputList-focusForeground:var(--cude-text)!important;
+  --vscode-pickerGroup-foreground:var(--cude-accent-fg)!important;
+  --vscode-inputOption-activeBorder:var(--cude-accent)!important;
+  --vscode-inputOption-activeBackground:var(--cude-accent-soft)!important;
+  --vscode-inputOption-activeForeground:var(--cude-text)!important;
+  --vscode-checkbox-background:var(--cude-card-2)!important;
+  --vscode-checkbox-foreground:var(--cude-text)!important;
+  --vscode-checkbox-border:var(--cude-hair-strong)!important;
+}
+
+.monaco-workbench:is(.vs,.hc-light) :is(.quick-input-widget,.monaco-hover,.workbench-hover,.notifications-center,.notification-list-item,.settings-editor) {
+  color:var(--cude-text)!important;
+}
+.monaco-workbench:is(.vs,.hc-light) .monaco-menu-container .monaco-scrollable-element {
+  background:var(--cude-card-2)!important; color:var(--cude-text)!important;
+}
+.monaco-workbench:is(.vs,.hc-light) .monaco-menu .monaco-action-bar.vertical .action-item.focused > .action-menu-item,
+.monaco-workbench:is(.vs,.hc-light) .monaco-menu .monaco-action-bar.vertical .action-item > .action-menu-item:hover {
+  background:var(--cude-accent-soft)!important; color:var(--cude-text)!important;
+  outline-color:var(--cude-accent)!important;
+}
+.monaco-workbench:is(.vs,.hc-light) .monaco-button:focus-visible {
+  outline-color:var(--cude-accent)!important;
+}

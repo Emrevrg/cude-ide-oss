@@ -1,0 +1,1325 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; img-src {{CSP}} data:; style-src {{CSP}} 'unsafe-inline'; script-src 'nonce-{{NONCE}}';">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: var(--vscode-sideBar-background, #141513);
+      --surface: var(--vscode-input-background, #191a18);
+      --raised: var(--vscode-editorWidget-background, #20211e);
+      --line: var(--vscode-input-border, #393a35);
+      --text: var(--vscode-sideBar-foreground, #e9e9e4);
+      --muted: var(--vscode-descriptionForeground, #aaa99f);
+      --quiet: var(--vscode-disabledForeground, #88877f);
+      --accent: #d69b70;
+      --positive: var(--vscode-gitDecoration-addedResourceForeground, #83b48b);
+      --negative: var(--vscode-gitDecoration-deletedResourceForeground, #d48a83);
+      --shadow: 0 8px 24px #0002;
+      --syntax-keyword: var(--vscode-symbolIcon-keywordForeground, #d7a681);
+      --syntax-string: var(--vscode-symbolIcon-stringForeground, #b6c69d);
+      --syntax-comment: var(--vscode-editorCodeLens-foreground, #88877e);
+      --syntax-number: var(--vscode-symbolIcon-numberForeground, #d69b70);
+      --syntax-type: var(--vscode-symbolIcon-classForeground, #a9b99f);
+      --syntax-added: var(--vscode-gitDecoration-addedResourceForeground, #83b48b);
+      --syntax-removed: var(--vscode-gitDecoration-deletedResourceForeground, #d48a83);
+      font: 13px/1.5 var(--vscode-font-family, "Segoe UI", system-ui, sans-serif);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--vscode-font-family, "Segoe UI", system-ui, sans-serif); font-size: 13px; }
+    button, textarea, select { font: inherit; }
+    button { color: inherit; }
+    .shell { height: 100vh; min-height: 360px; display: flex; flex-direction: column; padding: 0 18px; }
+    .top { height: 50px; min-height: 50px; display: flex; align-items: center; gap: 4px; }
+    .thread { flex: 1 1 auto; min-width: 0; max-width: 260px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: transparent; border: 0; border-radius: 5px; padding: 7px 8px; font-weight: 550; cursor: pointer; }
+    .thread:hover, .icon:hover, .mode:hover, .tool:hover, .quiet-button:hover { background: var(--raised); color: var(--text); }
+    .modes { display: flex; align-items: center; gap: 1px; margin: 0 4px; padding: 3px; background: var(--raised); border-radius: 6px; }
+    .mode { border: 0; background: transparent; color: var(--muted); padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+    .mode.active { color: var(--text); background: var(--bg); box-shadow: 0 1px 2px #0002; }
+    .grow { flex: 1 1 6px; min-width: 4px; }
+    .icon { flex: 0 0 30px; width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--muted); cursor: pointer; }
+    .icon svg { width: 16px; height: 16px; }
+    .project { flex: 0 1 24%; min-width: 0; max-width: 24%; margin-left: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 11px; }
+    .history { flex: 1 1 auto; min-height: 0; overflow: auto; scrollbar-color: var(--line) transparent; padding: 22px 0 16px; }
+    .column { width: 100%; max-width: 760px; margin: 0 auto; }
+    .empty { min-height: min(48vh, 380px); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 22px clamp(10px, 4vw, 36px); }
+    .brand { width: 44px; height: 44px; object-fit: contain; margin-bottom: 20px; }
+    .empty h1 { margin: 0 0 6px; font-size: 18px; line-height: 1.3; letter-spacing: -.2px; font-weight: 560; }
+    .empty p { margin: 0; max-width: 420px; color: var(--muted); font-size: 12px; }
+    .shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; width: min(100%, 410px); margin-top: 24px; }
+    .shortcut { min-height: 40px; display: flex; align-items: center; gap: 9px; padding: 8px 10px; text-align: left; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+    .shortcut:hover { color: var(--text); border-color: var(--accent); background: var(--raised); }
+    .shortcut kbd { margin-left: auto; color: var(--quiet); font: 10px var(--vscode-editor-font-family, Consolas, monospace); }
+    .message { margin: 0 4px 22px; overflow-wrap: anywhere; animation: appear 120ms ease-out both; }
+    .message.user { width: fit-content; max-width: min(86%, 680px); margin-left: auto; padding: 9px 13px; background: var(--raised); border: 1px solid var(--line); border-radius: 12px 12px 3px 12px; white-space: pre-wrap; }
+    .message.assistant { padding: 0 8px; line-height: 1.68; }
+    .message.assistant p { margin: 0 0 12px; }
+    .message.assistant h1, .message.assistant h2, .message.assistant h3 { margin: 18px 0 7px; font-size: 14px; line-height: 1.4; font-weight: 600; }
+    .message.assistant ul, .message.assistant ol { margin: 5px 0 13px; padding-left: 22px; }
+    .message.assistant li { margin: 3px 0; }
+    .message.assistant code.inline { padding: 2px 5px; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 4px; font: 11px var(--vscode-editor-font-family, Consolas, monospace); }
+    .code { margin: 12px 0; overflow: hidden; background: var(--vscode-editor-background, var(--surface)); border: 1px solid var(--line); border-radius: 7px; }
+    .code-head { min-height: 33px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 6px 0 10px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 11px; }
+    .code-label { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; } .code-path { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--vscode-editor-font-family, Consolas, monospace); } .code-lang { flex: 0 0 auto; padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; font-size: 10px; }
+    .code-actions { display: flex; flex: 0 0 auto; gap: 2px; } .code-actions button { white-space: nowrap; }
+    .copy { padding: 4px 7px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; font-size: 10px; }
+    .copy:hover { background: var(--raised); color: var(--text); }
+    .code-actions { display:flex;align-items:center;gap:2px; }
+    .code pre { margin: 0; padding: 12px; overflow: auto; color: var(--text); font: 11px/1.6 var(--vscode-editor-font-family, Consolas, monospace); tab-size: 2; }
+    .tok-keyword { color: var(--syntax-keyword); }.tok-string { color: var(--syntax-string); }.tok-comment { color: var(--syntax-comment); font-style: italic; }.tok-number { color: var(--syntax-number); }.tok-type { color: var(--syntax-type); }.tok-property { color: var(--syntax-type); }.tok-added { color: var(--syntax-added); }.tok-removed { color: var(--syntax-removed); }
+    .file-link { padding: 0; border: 0; border-bottom: 1px dotted var(--muted); background: transparent; color: var(--accent, var(--accent)); cursor: pointer; font: inherit; }
+    .activity { margin: 0 8px 12px; color: var(--muted); font-size: 11px; }
+    .activity summary { display: flex; align-items: center; gap: 7px; list-style: none; cursor: pointer; }
+    .activity summary::-webkit-details-marker { display: none; }
+    .activity summary::before { content: '›'; color: var(--quiet); transition: transform 120ms ease; }
+    .activity[open] summary::before { transform: rotate(90deg); }
+    .activity-icon { width: 13px; height: 13px; flex: 0 0 13px; color: var(--quiet); }
+    .activity.running summary > .activity-label { background: linear-gradient(100deg, var(--muted) 38%, var(--text) 50%, var(--muted) 62%); background-size: 220% 100%; color: transparent; background-clip: text; -webkit-background-clip: text; animation: sheen 1.8s linear infinite; }
+    .activity.done { color: var(--quiet); }
+    .activity .duration { margin-left: auto; color: var(--quiet); font-size: 10px; }
+    .activity-content { margin: 6px 0 2px 13px; padding-left: 10px; color: var(--muted); border-left: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .status { display: flex; align-items: center; gap: 8px; margin: 0 8px 14px; color: var(--muted); font-size: 11px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .status span:last-child { background: linear-gradient(100deg, var(--muted) 38%, var(--text) 50%, var(--muted) 62%); background-size: 220% 100%; color: transparent; background-clip: text; -webkit-background-clip: text; animation: sheen 1.8s linear infinite; }
+    .plan, .changes { margin: 12px 4px 22px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; }
+    .card-head { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 560; }
+    .card-head .count { flex: 0 0 auto; white-space: nowrap; padding: 2px 7px; color: var(--muted); background: var(--raised); border: 1px solid var(--line); border-radius: 999px; font-size: 10px; font-weight: 400; line-height: 1.35; }
+    .plan-summary { margin: 7px 0 10px; color: var(--muted); font-size: 11px; }
+    .plan-step { display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 11px; }
+    .plan-step .step-type { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: 66px; color: var(--muted); font: 10px var(--vscode-font-family, "Segoe UI", system-ui, sans-serif); }
+    .step-type svg { width: 13px; height: 13px; color: var(--quiet); }
+    .plan-step .step-title { flex: 1; min-width: 0; }
+    .plan-step button, .secondary { padding: 5px 8px; color: var(--text); background: transparent; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 10px; }
+    .plan-step button:hover, .secondary:hover { border-color: var(--accent); }
+    .artifact { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+    .change-actions { display: flex; gap: 6px; margin-left: auto; }
+    .file-list { display: grid; gap: 5px; margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line); }
+    .file-row { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--muted); font-size: 10px; }
+    .file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .plus { color: var(--positive); }.minus { color: var(--negative); }
+    .context { display: flex; flex-wrap: wrap; gap: 5px; width: 100%; max-width: 760px; margin: 0 auto; }
+    .context:empty { display: none; }
+    .context-chip { display: flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 7px; color: var(--muted); background: var(--raised); border: 1px solid var(--line); border-radius: 4px; font-size: 10px; }
+    .context-chip button { padding: 0; color: var(--muted); background: transparent; border: 0; cursor: pointer; }
+    .composer-wrap { position: relative; width: 100%; max-width: 760px; margin: 0 auto; padding-top: 8px; }
+    .composer { padding: 9px 10px 7px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; transition: border-color 120ms ease, box-shadow 120ms ease; }
+    .composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent); }
+    .composer textarea { display: block; width: 100%; min-height: 38px; max-height: 160px; resize: none; padding: 2px 1px 8px; color: var(--text); background: transparent; border: 0; outline: 0; font: 13px/1.5 var(--vscode-font-family, "Segoe UI", system-ui, sans-serif); }
+    .composer textarea:focus-visible { outline: 0; }
+    .composer textarea::placeholder { color: var(--muted); opacity: .9; }
+    .tools { display: flex; align-items: center; gap: 4px; min-height: 30px; border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); padding-top: 6px; }
+    .tool, .quiet-button { min-width: 28px; min-height: 28px; padding: 5px 7px; color: var(--muted); background: transparent; border: 0; border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 10px; }
+    .tool-menu { position: relative; flex: 0 1 auto; min-width: 0; }
+    .tool-menu-button { min-height: 28px; display: inline-flex; align-items: center; gap: 4px; max-width: 146px; padding: 4px 6px; color: var(--muted); background: transparent; border: 0; border-radius: 4px; cursor: pointer; white-space: nowrap; font-size: 11px; }
+    .tool-menu-button:hover, .tool-menu-button[aria-expanded="true"] { color: var(--text); background: var(--raised); }
+    .tool-menu-button:focus-visible { outline: 1px solid var(--accent); }
+    .tool-menu-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .chevron { width: 10px; height: 10px; flex: 0 0 10px; color: var(--quiet); }
+    .menu-popover { position: absolute; z-index: 8; left: 0; bottom: calc(100% + 8px); min-width: 170px; max-height: 260px; overflow: auto; padding: 4px; background: var(--vscode-quickInput-background, var(--raised)); border: 1px solid var(--line); border-radius: 7px; box-shadow: var(--shadow); }
+    .menu-popover[hidden] { display: none; }
+    .menu-option { width: 100%; display: flex; align-items: center; gap: 9px; padding: 7px 8px; text-align: left; color: var(--text); background: transparent; border: 0; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .menu-option:hover, .menu-option[aria-checked="true"] { background: var(--vscode-list-hoverBackground, var(--surface)); }
+    .menu-option[aria-checked="true"]::after { content: '✓'; margin-left: auto; color: var(--accent); }
+    .menu-option-copy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .model-search { width: 100%; min-height: 28px; margin: 3px 0 6px; padding: 5px 7px; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 4px; outline: none; }
+    .menu-option-copy small { color: var(--quiet); font-size: 10px; }
+    .send { flex: 0 0 30px; width: 30px; height: 30px; display: grid; place-items: center; color: #1a120c; background: var(--accent); border: 0; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    .send:hover { background: var(--vscode-button-hoverBackground, var(--accent)); }
+    .send.stop { background: var(--raised); color: var(--text); border: 1px solid var(--line); }
+    .context-ring { width:30px;height:30px;position:relative;display:grid;place-items:center;color:var(--quiet);font-size:8px; }
+    .context-ring svg { position:absolute;inset:5px;width:20px;height:20px;transform:rotate(-90deg); }
+    .ring-track,.ring-value { fill:none;stroke:var(--line);stroke-width:2.4; }
+    .ring-value { stroke:var(--accent);stroke-dasharray:59.7;stroke-dashoffset:59.7;transition:stroke-dashoffset 160ms ease; }
+    .context-ring small { z-index:1;font-size:8px; }
+    .queue-count { color:var(--muted);font-size:10px;white-space:nowrap; }
+    .send:disabled { opacity: .45; cursor: default; }
+    .suggestions { position: absolute; z-index: 5; left: 0; right: 0; bottom: calc(100% - 3px); max-height: 220px; overflow: auto; padding: 5px; background: var(--vscode-quickInput-background, var(--raised)); border: 1px solid var(--line); border-radius: 7px; box-shadow: var(--shadow); }
+    .suggestion { width: 100%; display: flex; align-items: center; gap: 9px; padding: 8px; text-align: left; color: var(--text); background: transparent; border: 0; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .suggestion:hover, .suggestion.active { background: var(--vscode-list-hoverBackground, var(--raised)); }
+    .suggestion small { margin-left: auto; color: var(--quiet); font-size: 10px; }
+    .suggestion mark { color:var(--text);background:color-mix(in srgb,var(--accent) 28%,transparent);border-radius:2px; }
+    .notice { margin: 8px; color: var(--vscode-errorForeground, #dc7777); font-size: 11px; }
+    button:focus-visible, textarea:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+    @keyframes appear { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes sheen { to { background-position: -220% 0; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    @media (max-width: 470px) {
+      .shell { padding: 0 10px; }.top { gap: 2px; }.thread { max-width: 34%; font-size: 11px; padding: 6px 3px; }
+      .modes { margin: 0 2px; gap: 0; }.mode { padding: 5px 5px; font-size: 10px; }.project { display: none; }
+      .icon { flex-basis: 26px; width: 26px; height: 26px; }
+      .tools { gap: 2px; }.tool-menu-button { max-width: 112px; padding-inline: 4px; font-size: 10px; }.tool-menu { flex: 0 1 auto; }
+      .empty { padding-left: 9px; padding-right: 9px; }.shortcuts { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 360px) {
+      .thread { max-width: 27%; }.mode { padding: 4px 3px; font-size: 9px; }.tools { gap: 1px; }.tool-menu-button { max-width: 94px; padding-inline: 3px; font-size: 9px; }
+    }
+    /* ===== Cude panel v2 — sade, olgun düzen (Claude, 18 Kas) ===== */
+    :root { --r: 8px; --fs: var(--vscode-font-size, 13px); --hover: var(--vscode-list-hoverBackground, color-mix(in srgb, var(--text) 7%, transparent)); --soft: color-mix(in srgb, var(--text) 5%, transparent); --edge: color-mix(in srgb, var(--line) 75%, transparent); }
+    body { font-size: var(--fs); -webkit-font-smoothing: antialiased; }
+    .shell { padding: 0 12px; }
+    .top { height: 40px; min-height: 40px; gap: 2px; margin: 0 -12px; padding: 0 8px 0 10px; box-shadow: inset 0 -1px 0 var(--edge); }
+    .thread { max-width: 46%; padding: 5px 6px; font-size: 12px; font-weight: 600; letter-spacing: .1px; }
+    .modes { background: transparent; padding: 0; margin: 0 2px; gap: 0; }
+    .mode { position: relative; padding: 11px 7px; border-radius: 0; font-size: 11.5px; color: var(--quiet); }
+    .mode:hover { background: transparent; color: var(--text); }
+    .mode.active { background: transparent; box-shadow: none; color: var(--text); }
+    .mode.active::after { content: ''; position: absolute; left: 7px; right: 7px; bottom: -1px; height: 1.5px; border-radius: 1px; background: var(--text); }
+    .icon { flex-basis: 26px; width: 26px; height: 26px; border-radius: 5px; color: var(--quiet); }
+    .icon:hover { color: var(--text); background: var(--hover); }
+    .project { display: none; }
+    .history { padding: 18px 0 12px; }
+    .column { max-width: 720px; }
+    .empty { min-height: calc(100vh - 230px); justify-content: center; align-items: center; text-align: center; padding: 16px 8px; }
+    .brand { width: 30px; height: 30px; margin-bottom: 16px; opacity: .55; }
+    .empty h1 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .empty p { font-size: 12px; color: var(--quiet); }
+    .shortcuts { grid-template-columns: 1fr; gap: 2px; width: min(100%, 300px); margin-top: 22px; }
+    .shortcut { min-height: 32px; padding: 6px 10px; border: 0; border-radius: 6px; color: var(--muted); font-size: 12px; justify-content: center; }
+    .shortcut:hover { background: var(--hover); color: var(--text); border: 0; }
+    .shortcut kbd { padding: 1px 5px; border: 1px solid var(--edge); border-radius: 4px; font-size: 10px; }
+    .message { margin: 0 0 18px; }
+    .message.user { max-width: 88%; padding: 7px 11px; background: var(--soft); border: 1px solid var(--edge); border-radius: 10px; line-height: 1.5; }
+    .message.assistant { padding: 0 2px; line-height: 1.62; }
+    .message.assistant p { margin: 0 0 10px; }
+    .message.assistant code.inline { padding: 1px 4px; background: var(--soft); border: 0; font-size: 11.5px; }
+    .code { margin: 10px 0 12px; border-color: var(--edge); border-radius: 7px; }
+    .code-head { min-height: 30px; padding: 0 4px 0 10px; background: var(--soft); border-bottom: 1px solid var(--edge); }
+    .code-path { font-size: 11px; }
+    .code-lang { border: 0; padding: 0; color: var(--quiet); }
+    .code-actions button, .copy { padding: 4px 7px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
+    .code-actions button:hover, .copy:hover { background: var(--hover); color: var(--text); }
+    .code pre { padding: 10px 12px; font-size: 11.5px; line-height: 1.55; }
+    .activity { margin: 0 2px 10px; }
+    .status { margin: 0 2px 12px; }
+    .plan, .changes { margin: 10px 0 18px; padding: 10px 12px; background: transparent; border-color: var(--edge); border-radius: var(--r); }
+    .plan-step button, .secondary { padding: 4px 9px; border-color: var(--edge); border-radius: 5px; font-size: 11px; }
+    .plan-step button:hover, .secondary:hover { background: var(--hover); border-color: var(--edge); }
+    .context { gap: 4px; max-width: 720px; padding: 0 0 6px; }
+    .context-chip { padding: 2px 4px 2px 8px; background: var(--soft); border: 1px solid var(--edge); border-radius: 999px; font-size: 11px; }
+    .context-chip button { width: 16px; height: 16px; border-radius: 50%; }
+    .context-chip button:hover { background: var(--hover); color: var(--text); }
+    .composer-wrap { max-width: 720px; padding: 0 0 10px; }
+    .composer { padding: 8px 8px 6px 10px; background: var(--vscode-input-background, var(--surface)); border: 1px solid var(--edge); border-radius: 10px; box-shadow: 0 1px 2px #0000001a; }
+    .composer:focus-within { border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); box-shadow: 0 1px 2px #0000001a; }
+    .composer textarea { min-height: 22px; max-height: 40vh; padding: 2px 0 6px; font-size: var(--fs); line-height: 1.5; }
+    .tools { gap: 1px; min-height: 28px; border-top: 0; padding-top: 2px; }
+    .tool { width: 26px; height: 26px; min-width: 26px; min-height: 26px; padding: 0; display: grid; place-items: center; border-radius: 5px; font-size: 15px; line-height: 1; }
+    .tool:hover, .tool-menu-button:hover, .tool-menu-button[aria-expanded="true"] { background: var(--hover); color: var(--text); }
+    .tool-menu-button { min-height: 26px; padding: 3px 6px; border-radius: 5px; font-size: 11.5px; color: var(--muted); }
+    .menu-popover, .suggestions { border-color: var(--edge); border-radius: 8px; box-shadow: 0 6px 24px #00000040; }
+    .menu-option, .suggestion { padding: 6px 8px; border-radius: 5px; font-size: 12px; }
+    .context-ring { width: 26px; height: 26px; }
+    .context-ring svg { inset: 4px 3px; width: 18px; height: 18px; }
+    .context-ring small { display: none; }
+    .send { flex-basis: 26px; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; font-weight: 700; }
+    .send.stop { border-radius: 50%; font-size: 9px; }
+    .code pre code, .code pre span { background: none !important; border: 0 !important; padding: 0 !important; border-radius: 0 !important; }
+    /* v2.1: modlar mesaj kutusunda (Claude Code / Codex gibi 4 mod); üst çubuk sade */
+    .modes { display: none !important; }
+    .thread { max-width: none; flex: 1 1 auto; }
+    #permission-toggle { gap: 5px; padding: 3px 8px; border: 1px solid var(--edge); border-radius: 999px; color: var(--text); }
+    #permission-toggle::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--quiet); flex: 0 0 6px; }
+    #permission-toggle[data-level="auto"]::before { background: var(--positive); }
+    #permission-toggle[data-level="plan"]::before { background: #c9a26b; }
+    #permission-toggle[data-level="full"] { color: var(--vscode-editorWarning-foreground, #d9a35b); border-color: color-mix(in srgb, var(--vscode-editorWarning-foreground, #d9a35b) 45%, transparent); }
+    #permission-toggle[data-level="full"]::before { background: var(--vscode-editorWarning-foreground, #d9a35b); }
+    #permission-options { min-width: 260px; }
+    .composer { border-radius: 14px; padding: 10px 10px 7px 12px; }
+    .composer textarea { min-height: 40px; }
+    .top .icon#new { order: 3; }
+    #model-toggle { color: var(--text); max-width: 190px; font-weight: 500; }
+    #model-toggle .tool-menu-label::before { content: ''; display: inline-block; width: 12px; height: 12px; margin-right: 5px; vertical-align: -2px; border-radius: 3px; background: color-mix(in srgb, var(--accent) 55%, transparent); }
+    .message.assistant[data-done="1"][data-model]::after { content: attr(data-model); display: block; margin-top: 4px; color: var(--quiet); font-size: 10.5px; }
+    /* v3 boş durum — Codex uygulaması düzeni: ortada başlık + mesaj kutusu, altta bağlam satırı */
+    .shell.is-empty .history { display: flex; align-items: safe center; padding: 14px 0; }
+    .shell.is-empty .empty { min-height: 0; padding: 0; }
+    .shell.is-empty .empty .brand { width: 34px; height: 34px; opacity: .9; margin-bottom: 14px; }
+    .shell.is-empty .empty h1 { font-size: 17px; font-weight: 500; letter-spacing: -.2px; }
+    .shell.is-empty .empty p, .shell.is-empty .shortcuts { display: none; }
+    .shell.is-empty .top { flex-shrink: 0; }
+    .shell.is-empty .composer textarea { min-height: 64px; }
+    .empty-meta { display: none; gap: 6px; padding: 8px 4px 0; color: var(--quiet); font-size: 11px; }
+    .shell.is-empty .empty-meta { display: none; }
+    .empty-meta span { padding: 2px 8px; border: 1px solid var(--edge); border-radius: 999px; }
+    .empty-meta span:first-child::before { content: ''; display: inline-block; width: 9px; height: 7px; margin-right: 5px; border: 1.2px solid currentColor; border-radius: 1.5px; vertical-align: 0; }
+    .shell { position: relative; }
+    /* v3.1 — üst çubukta belirgin model/sağlayıcı düğmesi, büyük logo */
+    .model-chip { order: 2; flex: 0 1 auto; min-width: 0; max-width: 62%; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px 0 8px; margin-right: 4px;
+      color: var(--text); background: var(--soft); border: 1px solid var(--edge); border-radius: 999px; font-size: 11.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+    .model-chip span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+    .model-chip:hover { background: var(--hover); }
+    .model-chip-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--positive); }
+    .model-chip.no-model { color: var(--vscode-editorWarning-foreground, #d9a35b); }
+    .model-chip.no-model .model-chip-dot { background: var(--vscode-editorWarning-foreground, #d9a35b); }
+    .top { gap: 6px; }
+    .top .thread { order: 1; flex: 0 1 auto; max-width: 34%; color: var(--muted); font-weight: 500; }
+    .top .grow { order: 3; }
+    .top #provider { order: 5; } .top #new { order: 6; }
+    .shell.is-empty .empty .brand { width: 58px; height: 58px; margin-bottom: 18px; opacity: 1; }
+    .shell.is-empty .empty h1 { font-size: 18px; }
+    /* v3.2 — Cude AI | Cuets yüzey sekmeleri */
+    .surface-tabs { order: 0; display: inline-flex; align-items: center; padding: 2px; gap: 2px; background: var(--soft); border: 1px solid var(--edge); border-radius: 8px; }
+    .surface { padding: 3px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 11.5px; font-weight: 500; cursor: pointer; }
+    .surface[data-surface="ai"]{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.surface-mark{width:13px;height:13px;object-fit:contain}.vscode-light .surface-mark,.vscode-high-contrast-light .surface-mark{filter:brightness(.25)}#model-chip{max-width:48%;margin-right:0} #model-chip .chevron{flex:none;width:11px} .model-chip span:nth-child(2){min-width:0}@media(max-width:295px){.surface{padding-inline:5px}.surface-mark{display:none}#model-chip{max-width:40%}}
+    .surface:hover { color: var(--text); }
+    .surface.active { background: var(--vscode-editor-background, var(--bg)); color: var(--text); box-shadow: 0 0 0 1px var(--edge); }
+    .surface[data-surface="cuets"].active { color: var(--accent); }
+    .top .thread { display: none; }
+    .surface-note { margin: 4px 2px 14px; color: var(--quiet); font-size: 11px; }
+    /* v4 — Trae'den esinlenen sade composer + Cuets görünümü (özgün) */
+    .composer { border-radius: 14px; padding: 10px 10px 8px 12px; background: var(--vscode-input-background, var(--raised)); border: 1px solid var(--edge); box-shadow: 0 1px 0 rgba(0,0,0,.18), 0 8px 24px -16px rgba(0,0,0,.6); transition: border-color .15s ease, box-shadow .15s ease; }
+    .composer:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--edge)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent), 0 8px 24px -16px rgba(0,0,0,.6); }
+    .composer .tools { gap: 4px; margin-top: 6px; }
+    .tool, #add { width: 26px; height: 26px; display: inline-grid; place-items: center; border-radius: 8px; border: 1px solid var(--edge); background: transparent; color: var(--muted); cursor: pointer; padding: 0; }
+    .tool:hover, #add:hover { color: var(--text); background: var(--hover); }
+    .tool svg, #add svg { width: 15px; height: 15px; }
+    .send { width: 28px !important; height: 28px !important; border-radius: 9px !important; display: inline-grid !important; place-items: center; padding: 0 !important; border: 0; background: var(--text) !important; color: var(--vscode-editor-background, #111) !important; transition: transform .12s ease, opacity .12s ease; }
+    .send svg { width: 15px; height: 15px; }
+    .send:hover { transform: translateY(-1px); }
+    .send:disabled { opacity: .35; transform: none; }
+    .send.stop { background: var(--soft) !important; color: var(--text) !important; box-shadow: inset 0 0 0 1px var(--edge); }
+    .composer-foot { display: flex; align-items: center; gap: 6px; padding: 7px 2px 0; }
+    .foot-button { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; max-width: 70%; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 11.5px; cursor: pointer; white-space: nowrap; }
+    .foot-button span { overflow: hidden; text-overflow: ellipsis; }
+    .foot-button:hover { background: var(--hover); color: var(--text); }
+    .foot-button svg { width: 14px; height: 14px; flex: 0 0 auto; }
+    .foot-button .chevron { width: 10px; height: 10px; opacity: .7; }
+    .foot-hint { color: var(--quiet); font-size: 11px; }
+    .add-popover { min-width: 240px; max-height: min(420px, calc(100vh - 120px)); }
+    .add-option { display: flex !important; align-items: center; gap: 10px; }
+    .add-option > svg { width: 16px; height: 16px; flex: 0 0 16px; color: var(--muted); }
+    .menu-popover.from-top { position: fixed; bottom: auto; right: auto; width: 260px; max-height: 340px; z-index: 50; }
+    /* Cuets */
+    .cuets-empty { display: none; flex-direction: column; align-items: center; text-align: center; padding: 0 12px; }
+    .shell.cuets.is-empty .cuets-empty { display: flex; }
+    .shell.cuets .empty { display: none !important; }
+    .cuets-mark { width: 64px; height: 64px; margin-bottom: 14px; overflow: visible; }
+    .cm-orbit { transform-origin: 32px 33px; animation: cm-spin 14s linear infinite; }
+    .cm-link { fill: none; stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: 1.2; stroke-dasharray: 3 4; animation: cm-flow 2.4s linear infinite; }
+    .cm-dot { fill: var(--accent); transform-box: fill-box; transform-origin: center; animation: cm-pulse 2.4s ease-in-out infinite; }
+    .cm-dot.d2 { animation-delay: .8s; fill: color-mix(in srgb, var(--accent) 70%, var(--text)); }
+    .cm-dot.d3 { animation-delay: 1.6s; fill: color-mix(in srgb, var(--accent) 45%, var(--text)); }
+    .cm-core { fill: var(--text); opacity: .85; }
+    @keyframes cm-spin { to { transform: rotate(360deg); } }
+    @keyframes cm-flow { to { stroke-dashoffset: -14; } }
+    @keyframes cm-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.62); opacity: .55; } }
+    @media (prefers-reduced-motion: reduce) { .cm-orbit, .cm-link, .cm-dot { animation: none; } }
+    .cuets-empty h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
+    .cuets-empty p { margin: 0 0 16px; max-width: 300px; color: var(--muted); font-size: 12px; }
+    .cuets-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .cuets-chip { height: 26px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 999px; background: transparent; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+    .cuets-chip:hover { color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--edge)); background: var(--hover); }
+    .shell.cuets .composer { border-color: color-mix(in srgb, var(--accent) 35%, var(--edge)); }
+    .surface { white-space: nowrap; }
+    .composer #model-menu { display: none; }
+    .model-chip { max-width: 48%; }
+    .trust-note { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; margin: 0 0 10px; padding: 10px 12px; border: 1px solid var(--vscode-inputValidation-warningBorder, rgba(255,190,80,.45)); border-radius: 10px; background: color-mix(in srgb, var(--vscode-inputValidation-warningBackground, #3a2f12) 55%, transparent); font-size: 12px; line-height: 1.45; }
+    .trust-note > span { flex: 1 1 180px; min-width: 0; }
+    .trust-note[hidden] { display: none; }
+    .composer-wrap:has(.trust-note:not([hidden])) .setup-card { display: none; }
+    .trust-actions { display: grid; justify-items: end; gap: 3px; }
+    .trust-note button.trust-model { background: transparent; color: var(--muted); text-decoration: underline; padding: 2px 0; }
+    .trust-note button { flex: none; white-space: nowrap; border: 0; border-radius: 7px; padding: 6px 10px; background: #d69b70; color: #1a120c; cursor: pointer; font: inherit; }
+    .footnote, .hint { display: none !important; }
+    /* Cuets long-running task: live checklist + resume card (reuses .plan/.card-head look) */
+    .cuets-progress .cuets-items { display: grid; gap: 2px; margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line); }
+    .cuets-item { display: flex; align-items: flex-start; gap: 8px; min-width: 0; padding: 3px 0; color: var(--muted); font-size: 11px; }
+    .cuets-item .cuets-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .cuets-item.done .cuets-title { color: var(--quiet); }
+    .cuets-item.in_progress .cuets-title { color: var(--text); }
+    .cuets-mark-icon { flex: 0 0 14px; width: 14px; text-align: center; color: var(--quiet); font-size: 11px; line-height: 16px; }
+    .cuets-item.done .cuets-mark-icon { color: var(--positive); }
+    .cuets-item.failed .cuets-mark-icon { color: var(--negative); }
+    .cuets-item.in_progress .cuets-mark-icon { color: var(--accent); animation: cuets-pulse 1.2s ease-in-out infinite; }
+    @keyframes cuets-pulse { 50% { opacity: .35; } }
+    .cuets-meta { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+    .cuets-meta.ok { color: var(--positive); } .cuets-meta.fail { color: var(--negative); }
+    .cuets-wait { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10.5px; }
+    .cuets-wait span { flex: 1; min-width: 0; }
+    .cuets-resume .plan-summary { margin-bottom: 0; }
+  
+    /* Cude composer polish */
+    .composer-wrap { width: min(100%, 44rem); padding-bottom: 12px; }
+    .composer {
+      padding: 10px 10px 8px;
+      border-radius: 12px;
+      background: var(--vscode-input-background, var(--raised));
+      box-shadow: 0 2px 10px -7px #0007;
+    }
+    .composer:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .composer textarea {
+      min-height: 44px;
+      padding: 3px 3px 8px;
+      line-height: 1.55;
+    }
+    .shell.is-empty .composer textarea { min-height: 56px; }
+    .composer .tools {
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 4px;
+      margin-top: 3px;
+    }
+    .composer .tools > * { min-width: 0; }
+    .composer .tools > .tool, .composer .tools > .send, .composer #add-menu, .composer .context-ring { flex-shrink: 0; }
+    .composer .tool-menu-button { max-width: 100%; }
+    .composer-wrap { flex-shrink: 0; }
+    body.vscode-light .empty .brand, body.vscode-high-contrast-light .empty .brand { filter: brightness(0); }
+    .composer .tool-menu-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .composer .tool-menu-button:focus-visible, .composer-foot button:focus-visible {
+      outline: 1px solid var(--accent);
+      outline-offset: 2px;
+    }
+    @media (max-width: 355px) {
+      .composer { padding: 8px 8px 6px; }
+      .composer textarea { min-height: 36px; }
+      .composer .tools { gap: 3px; }
+      .composer .tool-menu-label { max-width: 8em; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .composer, .composer * { transition-duration: 0s !important; }
+    }
+.voice-btn{transition:color .15s ease,background-color .15s ease,box-shadow .2s ease,opacity .2s ease}
+    .voice-btn.recording{color:#fff;background:var(--vscode-errorForeground,#e5484d);border-radius:999px;animation:cudeVoicePulse 1.25s ease-in-out infinite}
+    .voice-btn.busy{animation:cudeVoiceFade .9s ease-in-out infinite alternate}
+    .voice-btn[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);border-radius:6px}
+    .voice-btn[aria-pressed="true"] .wave{animation:cudeVoiceWave 1.6s ease-in-out infinite}
+    @keyframes cudeVoicePulse{0%,100%{box-shadow:0 0 0 0 rgba(229,72,77,.5)}50%{box-shadow:0 0 0 6px rgba(229,72,77,0)}}
+    @keyframes cudeVoiceFade{from{opacity:1}to{opacity:.35}}
+    @keyframes cudeVoiceWave{0%,100%{opacity:1}50%{opacity:.35}}
+    @media (prefers-reduced-motion:reduce){.voice-btn.recording,.voice-btn.busy,.voice-btn .wave{animation:none!important}}
+  .setup-card{margin:0 0 12px;padding:14px 16px;border:1px solid color-mix(in srgb,var(--vscode-foreground) 14%,transparent);border-radius:12px;background:color-mix(in srgb,var(--vscode-foreground) 4%,transparent)}.setup-card strong{display:block;font-size:13px;margin-bottom:4px}.setup-card p{margin:0 0 10px;font-size:12px;color:var(--vscode-descriptionForeground);line-height:1.5}.setup-actions{display:flex;flex-wrap:wrap;gap:6px}.setup-actions button{border-radius:8px;padding:6px 11px;font-size:12px;cursor:pointer;border:1px solid color-mix(in srgb,var(--vscode-foreground) 16%,transparent);background:transparent;color:inherit}.setup-actions .setup-primary{background:#d69b70;color:#1a120c;border-color:transparent;font-weight:600}
+    /* Readable activity lines (agent steps, tools, durations) */
+    .activity { font-size: 12.5px !important; line-height: 1.5; margin: 0 2px 10px; }
+    .activity summary { gap: 8px; padding: 3px 0; }
+    .activity-icon { width: 14px !important; height: 14px !important; flex-basis: 14px !important; }
+    .activity .duration { font-size: 11.5px !important; font-variant-numeric: tabular-nums; }
+    .activity-content { font-size: 12.5px; line-height: 1.55; margin: 6px 0 4px 14px; }
+    .step-type { font-size: 11.5px !important; min-width: 74px; }
+    .step-type svg, .step-icon svg { width: 14px; height: 14px; }
+    .step-title { font-size: 12.5px; }
+    .plan-step { padding: 5px 0; gap: 8px; }
+    .surface-note, .status-line, #status { font-size: 12px; }
+    #live-status, .status { font-size: 12.5px !important; gap: 8px; }
+    #live-status .status-dot, .status .status-dot { width: 7px; height: 7px; }
+    body.vscode-light, body.vscode-high-contrast-light { --accent: #b8713f; }
+:focus-visible{outline:1px solid var(--accent)!important;outline-offset:1px}input:focus,textarea:focus,select:focus{outline-color:var(--accent)!important;border-color:var(--accent)}
+.command-approval{margin:10px 0;padding:12px 14px;border:1px solid color-mix(in srgb,var(--accent,#d69b70) 45%,transparent);border-radius:12px;background:color-mix(in srgb,var(--accent,#d69b70) 7%,transparent)}.command-approval p{margin:0 0 8px;font-weight:600}.command-approval pre{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--vscode-foreground) 6%,transparent);white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;font-size:12px}.approval-actions{display:flex;gap:8px;flex-wrap:wrap}.command-approval button{font:inherit;font-size:12.5px;padding:6px 14px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:filter .15s,transform .15s}.command-approval button.approve{background:var(--accent,#d69b70);color:#fff;font-weight:600}.command-approval button.reject{background:transparent;color:var(--vscode-foreground);border-color:color-mix(in srgb,var(--vscode-foreground) 25%,transparent)}.command-approval button:hover:not(:disabled){filter:brightness(1.08)}.command-approval button:disabled{opacity:.5;cursor:default}
+.message{position:relative}.msg-actions{display:flex;gap:2px;margin-top:6px;opacity:0;transition:opacity .15s ease}.message.user .msg-actions{justify-content:flex-end;position:absolute;right:4px;bottom:-26px;margin:0}.message.user{margin-bottom:30px}.message:hover .msg-actions,.message:focus-within .msg-actions{opacity:1}.msg-act{display:inline-flex;align-items:center;justify-content:center;width:26px;height:24px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--vscode-descriptionForeground);cursor:pointer;transition:background .15s,color .15s,transform .15s}.msg-act svg{width:15px;height:15px}.msg-act:hover{background:color-mix(in srgb,var(--vscode-foreground) 9%,transparent);color:var(--vscode-foreground)}.msg-act:active{transform:scale(.92)}.msg-act.ok{color:var(--accent,#d69b70)}.msg-act:focus-visible{outline:1.5px solid var(--accent,#d69b70);outline-offset:1px}@media (hover:none){.msg-actions{opacity:1}}
+
+/* Cude theme palette: keep host blue out of webview controls. */
+body {
+  --cude-accent:#d69b70; --cude-on-accent:#090604; --cude-link:#d69b70;
+  --cude-bg:#141513; --cude-surface:#1e201c; --cude-raised:#282b25;
+  --cude-text:#f1f0e9; --cude-muted:#b6b7ae; --cude-border:#777b70;
+  --cude-positive:#a8d5aa; --cude-negative:#ffb4ab; --cude-warning:#e8c982;
+  color-scheme:dark;
+}
+body.vscode-light, body.vscode-high-contrast-light {
+  --cude-accent:#b8632f; --cude-on-accent:#090604; --cude-link:#91471f;
+  --cude-bg:#fbfaf7; --cude-surface:#ffffff; --cude-raised:#efede7;
+  --cude-text:#252720; --cude-muted:#55594f; --cude-border:#7b8073;
+  --cude-positive:#286335; --cude-negative:#a32a28; --cude-warning:#715309;
+  color-scheme:light;
+}
+body.vscode-high-contrast {
+  --cude-bg:#000000; --cude-surface:#000000; --cude-raised:#171717;
+  --cude-text:#ffffff; --cude-muted:#e0e0e0; --cude-border:#ffffff;
+  color-scheme:dark;
+}
+body.vscode-high-contrast-light { --cude-border:#252720; }
+body {
+  --accent:var(--cude-accent); --copper:var(--cude-accent); --copper2:var(--cude-accent);
+  --bg:var(--cude-bg); --surface:var(--cude-surface); --raised:var(--cude-raised);
+  --text:var(--cude-text); --ink:var(--cude-text); --muted:var(--cude-muted); --quiet:var(--cude-muted);
+  --line:var(--cude-border); --edge:var(--cude-border);
+  --positive:var(--cude-positive); --negative:var(--cude-negative);
+  --vscode-foreground:var(--cude-text); --vscode-sideBar-foreground:var(--cude-text);
+  --vscode-descriptionForeground:var(--cude-muted); --vscode-disabledForeground:var(--cude-muted);
+  --vscode-editor-background:var(--cude-bg); --vscode-sideBar-background:var(--cude-bg);
+  --vscode-input-background:var(--cude-surface); --vscode-input-foreground:var(--cude-text);
+  --vscode-editorWidget-background:var(--cude-raised); --vscode-quickInput-background:var(--cude-raised);
+  --vscode-panel-border:var(--cude-border); --vscode-input-border:var(--cude-border);
+  --vscode-button-background:var(--cude-accent); --vscode-button-foreground:var(--cude-on-accent);
+  --vscode-button-hoverBackground:var(--cude-accent);
+  --vscode-button-secondaryBackground:var(--cude-raised); --vscode-button-secondaryForeground:var(--cude-text);
+  --vscode-button-secondaryHoverBackground:var(--cude-surface);
+  --vscode-textLink-foreground:var(--cude-link); --vscode-textLink-activeForeground:var(--cude-link);
+  --vscode-list-hoverBackground:var(--cude-raised);
+  --vscode-list-activeSelectionBackground:var(--cude-accent); --vscode-list-activeSelectionForeground:var(--cude-on-accent);
+  --vscode-list-inactiveSelectionBackground:var(--cude-raised); --vscode-list-inactiveSelectionForeground:var(--cude-text);
+  --vscode-editor-selectionBackground:var(--cude-accent);
+  --vscode-testing-iconPassed:var(--cude-positive); --vscode-errorForeground:var(--cude-negative);
+  --vscode-editorWarning-foreground:var(--cude-warning);
+  background:var(--cude-bg); color:var(--cude-text);
+}
+::selection { background:var(--cude-accent); color:var(--cude-on-accent); }
+a, .file-link { color:var(--cude-link); text-decoration-color:var(--cude-accent); }
+input, select, textarea, progress { accent-color:var(--cude-accent); }
+:focus-visible { outline:2px solid var(--cude-accent)!important; outline-offset:2px; }
+input::placeholder, textarea::placeholder { color:var(--cude-muted); opacity:1; }
+button:disabled, button.action:disabled { opacity:1; filter:none; color:var(--cude-muted); background:var(--cude-raised); border-color:var(--cude-border); }
+body.vscode-high-contrast :is(button,input,select,textarea), body.vscode-high-contrast-light :is(button,input,select,textarea) { border:1px solid var(--cude-border); forced-color-adjust:none; }
+
+.send, .send:hover { background:var(--cude-accent)!important; color:var(--cude-on-accent)!important; }
+.send.stop, .send:disabled { background:var(--cude-raised)!important; color:var(--cude-text)!important; opacity:1; }
+.setup-actions .setup-primary, .trust-note button:not(.trust-model), .command-approval button.approve { background:var(--cude-accent); color:var(--cude-on-accent); }
+.file-link, .msg-act.ok { color:var(--cude-link); }
+.setup-card, .command-approval { border-color:var(--cude-border); }
+.trust-note { color:var(--cude-text); background:var(--cude-raised); border-color:var(--cude-warning); }
+.trust-note .trust-model { background:transparent; color:var(--cude-link); }
+.composer textarea::placeholder { opacity:1; }
+.tok-keyword, .tok-number { color:var(--cude-link); }
+.tok-string, .tok-added { color:var(--cude-positive); }
+.tok-type, .tok-property, .tok-comment { color:var(--cude-muted); }
+.tok-removed { color:var(--cude-negative); }
+.voice-btn.recording { background:var(--cude-negative); color:var(--cude-bg); }
+
+/* Shared Cude component geometry and interaction. */
+body {
+  --cude-control-height:32px; --cude-control-radius:6px;
+  --cude-card-radius:8px; --cude-card-min-height:96px;
+  --cude-badge-height:22px; --cude-motion:120ms ease;
+}
+body :is(button, select, input:not([type=checkbox]):not([type=radio]), textarea) {
+  box-sizing:border-box; border-radius:var(--cude-control-radius);
+  font-size:13px; line-height:18px;
+  transition:background-color var(--cude-motion),border-color var(--cude-motion),color var(--cude-motion),transform var(--cude-motion);
+}
+body :is(button, select, input:not([type=checkbox]):not([type=radio])) {
+  height:var(--cude-control-height); min-height:var(--cude-control-height); padding-block:6px;
+}
+body button:not(:disabled):hover { filter:none; transform:none; box-shadow:none; border-color:var(--cude-accent); }
+body button:not(:disabled):active { transform:translateY(1px); }
+body :is(button,input,select,textarea,summary):focus-visible {
+  outline:2px solid var(--cude-accent)!important; outline-offset:2px;
+}
+body textarea:not([hidden]) { min-height:72px; }
+body button.entry { height:auto; min-height:56px; }
+body :is(.icon,.send) { width:32px; flex-basis:32px; padding:0; }
+body .file-link { display:inline; height:auto; min-height:0; padding:0; border-radius:0; font:inherit; }
+body :is(.card,.setup-card,.plan,.changes,.command-approval,.model-card,.free-card,.cli-card,.support-card,.team-area,.step,.hero,.cu-box,.pool-model) {
+  box-sizing:border-box; min-height:var(--cude-card-min-height); border-radius:var(--cude-card-radius);
+  border:1px solid var(--cude-border); padding:12px; background:var(--cude-surface);
+  transition:background-color var(--cude-motion),border-color var(--cude-motion);
+}
+body :is(.step,.card,.model-card,.free-card,.cli-card):hover { transform:none; box-shadow:none; border-color:var(--cude-accent); }
+body :is(.badge,.tag,.kicker,.code-lang,.card-head .count,.tab .count) {
+  box-sizing:border-box; display:inline-flex; align-items:center; min-height:var(--cude-badge-height);
+  padding:1px 6px; border-radius:var(--cude-control-radius); font-size:11px; line-height:18px;
+}
+body input[type=checkbox]:not(.switch):not(.switch input), body input[type=radio] {
+  box-sizing:border-box; width:16px; height:16px; min-height:16px; padding:0;
+  flex:0 0 16px; border-radius:3px; cursor:pointer; appearance:none;
+  border:1px solid var(--cude-border); background:var(--cude-surface);
+}
+body input[type=checkbox]:not(.switch):not(.switch input):checked {
+  background-color:var(--cude-accent); border-color:var(--cude-accent);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3 3 7-7' fill='none' stroke='%23090604' stroke-width='2'/%3E%3C/svg%3E");
+}
+body input[type=radio] { border-radius:50%; }
+body input[type=radio]:checked { background:var(--cude-accent); box-shadow:inset 0 0 0 3px var(--cude-surface); }
+body :is(button.primary,button.approve,button.setup-primary) { color:var(--cude-on-accent); background:var(--cude-accent); }
+body :is(button.secondary,button.action:not(.primary),button.reject) { color:var(--cude-text); background:var(--cude-raised); border:1px solid var(--cude-border); }
+body input.switch, body .switch input {
+  appearance:none; box-sizing:border-box; width:38px!important; height:22px; min-height:22px;
+  flex:0 0 38px; padding:0!important; border:1px solid var(--cude-border)!important; border-radius:11px!important;
+  background:var(--cude-raised)!important; position:relative; cursor:pointer;
+  transition:background-color var(--cude-motion),border-color var(--cude-motion);
+}
+body input.switch::before, body .switch input::before {
+  content:''; position:absolute; width:14px; height:14px; top:3px; left:3px;
+  border-radius:50%; background:var(--cude-text); transition:left var(--cude-motion);
+}
+body input.switch:checked, body .switch input:checked { background:var(--cude-accent)!important; border-color:var(--cude-accent)!important; }
+body input.switch:checked::before, body .switch input:checked::before { left:19px; background:var(--cude-on-accent); }
+@media (prefers-reduced-motion:reduce) {
+  body *, body *::before, body *::after { transition:none!important; animation:none!important; }
+}
+
+body .composer { border-radius:var(--cude-card-radius); }
+body .composer textarea { min-height:72px; }
+body .command-approval pre { border-radius:var(--cude-control-radius); }
+/* Message actions remain readable without hovering. */
+body .msg-actions { display:flex; align-items:center; justify-content:flex-start; gap:4px; margin-top:6px; opacity:1; }
+body .message.user .msg-actions { position:static; justify-content:flex-end; margin:6px 0 0; }
+body .message.assistant .msg-actions { justify-content:flex-start; }
+body .msg-act { width:32px; min-width:32px; height:32px; padding:0; color:var(--cude-muted); background:transparent; border:1px solid transparent; }
+body .msg-act:not(:disabled):hover { color:var(--cude-text); background:var(--cude-raised); border-color:var(--cude-border); }
+body .msg-act.ok { color:var(--cude-link); }
+
+/* Anchor composer menus inside the 320 px panel, including long option labels. */
+@media(max-width:470px) {
+  body .composer .tool-menu { position:static; }
+  body .composer .menu-popover { left:0; right:0; min-width:0; max-width:100%; }
+  body .menu-option-copy { overflow-wrap:anywhere; }
+}
+</style>
+</head>
+<body>
+  <main class="shell is-empty">
+    <header class="top">
+      <nav class="surface-tabs" aria-label="Surface"><button class="surface active" type="button" data-surface="ai" aria-pressed="true"><img class="surface-mark" src="{{LOGO}}" alt="">Cude AI</button><button class="surface" type="button" data-surface="cuets" aria-pressed="false" title="Cuets — multi-agent workspace for large coding tasks">Cuets</button></nav><button class="model-chip" id="model-chip" type="button" title="Model and provider"><span class="model-chip-dot"></span><span id="model-chip-label">Select model</span><svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="thread" id="thread" title="Open chat history" data-i18n-title="chat.history" data-i18n="chat.new">New chat</button>
+      <button class="icon" id="new" title="New chat" aria-label="New chat" data-i18n-title="chat.new" data-i18n-aria="chat.new"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg></button>
+      <span class="grow"></span>
+      <span class="project" id="project">{{PROJECT}}</span>
+      <button class="icon" id="provider" title="Settings" aria-label="Settings" data-i18n-title="chat.settings" data-i18n-aria="chat.settings"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.2 1.8h3.6l.4 1.5c.4.2.8.4 1.1.7l1.5-.5 1.8 3-1.2 1.2v1l1.2 1.2-1.8 3-1.5-.5c-.3.3-.7.5-1.1.7l-.4 1.5H6.2l-.4-1.5c-.4-.2-.8-.4-1.1-.7l-1.5.5-1.8-3 1.2-1.2v-1L1.4 6.5l1.8-3 1.5.5c.3-.3.7-.5 1.1-.7l.4-1.5Z" stroke="currentColor" stroke-width="1.1"/><circle cx="8" cy="8" r="2" stroke="currentColor"/></svg></button>
+    </header>
+    <section class="history" id="history" aria-live="polite"><div class="column" id="column">
+      <div class="cuets-empty" id="cuets-empty"><svg class="cuets-mark" viewBox="0 0 64 64" aria-hidden="true"><g class="cm-orbit"><path class="cm-link" d="M32 12 L50 44 L14 44 Z"/><circle class="cm-dot d1" cx="32" cy="12" r="5"/><circle class="cm-dot d2" cx="50" cy="44" r="5"/><circle class="cm-dot d3" cx="14" cy="44" r="5"/></g><circle class="cm-core" cx="32" cy="33" r="3.2"/></svg><h1>Cuets</h1><p id="cuets-sub">Plans the work, runs agents in parallel and reviews changes until verification passes.</p><div class="cuets-chips"><button type="button" class="cuets-chip" data-prompt="Build a new feature end to end: ">Build a feature</button><button type="button" class="cuets-chip" data-prompt="Map this project and explain how it works: ">Understand project</button><button type="button" class="cuets-chip" data-prompt="Find and fix bugs, then run the tests: ">Fix and test</button><button type="button" class="cuets-chip" data-prompt="Refactor across files safely: ">Refactor</button></div></div><div class="empty" id="empty"><img class="brand" src="{{LOGO}}" alt="Cude"><h1 data-i18n="chat.emptyTitle">Work on your project</h1><p data-i18n="chat.emptyBody">Ask a question, request a change, or plan a task.</p><div class="shortcuts"><button class="shortcut" data-command="openProject"><span data-i18n="chat.openProject">Open project</span> <kbd>Ctrl+O</kbd></button><button class="shortcut" data-command="attach" data-i18n="chat.attach">Add files or context</button><button class="shortcut" data-command="search" data-i18n="chat.search">Search project</button><button class="shortcut" data-command="provider" data-i18n="chat.provider">Provider settings</button></div></div>
+    </div></section>
+    <div class="context" id="context"></div>
+    <div class="composer-wrap">
+      <div class="suggestions" id="suggestions" hidden role="listbox" aria-label="Suggestions"></div>
+      <form class="composer" id="form">
+        <textarea id="prompt" placeholder="Message Cude…" data-i18n-placeholder="chat.prompt" rows="1" {{DISABLED}}></textarea>
+        <div class="tools">
+          <div class="tool-menu" id="add-menu"><button type="button" class="tool" id="add" title="Add" aria-label="Add" aria-haspopup="menu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><div class="menu-popover add-popover" id="add-options" role="menu" hidden></div></div>
+          <div class="tool-menu" id="permission-menu">
+            <button class="tool-menu-button" id="permission-toggle" type="button" aria-label="Permission level" data-i18n-aria="chat.permission" aria-haspopup="menu" aria-expanded="false"><span class="tool-menu-label" id="permission-label">Ask</span><svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="menu-popover" id="permission-options" role="menu" aria-label="Permission level" data-i18n-aria="chat.permission" hidden></div>
+          </div>
+          <div class="tool-menu" id="model-menu">
+            <button class="tool-menu-button" id="model-toggle" type="button" aria-label="Choose model" data-i18n-aria="chat.model" aria-haspopup="menu" aria-expanded="false"><span class="tool-menu-label" id="model-label">Choose model</span><svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="menu-popover" id="model-options" role="menu" aria-label="Choose model" data-i18n-aria="chat.model" hidden></div>
+          </div>
+          <div class="tool-menu" id="effort-menu">
+            <button class="tool-menu-button" id="effort-toggle" type="button" aria-label="Reasoning effort" data-i18n-aria="chat.effort" aria-haspopup="menu" aria-expanded="false"><span class="tool-menu-label" id="effort-label">Medium</span><svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="menu-popover" id="effort-options" role="menu" aria-label="Reasoning effort" data-i18n-aria="chat.effort" hidden></div>
+          </div>
+          <span class="context-ring" id="context-ring" title="Context usage" aria-label="Context usage" data-i18n-title="chat.context" data-i18n-aria="chat.context"><svg viewBox="0 0 24 24"><circle class="ring-track" cx="12" cy="12" r="9.5"/><circle class="ring-value" id="ring-value" cx="12" cy="12" r="9.5"/></svg><small id="ring-label">0%</small></span>
+          <span class="queue-count" id="queue-count" hidden></span><span class="grow"></span>
+          <button type="button" class="tool voice-btn" id="speak-toggle" aria-pressed="false" title="Read answers aloud" aria-label="Read answers aloud"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6.2h2.2L8.4 3.6v8.8L5.2 9.8H3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path class="wave" d="M10.6 5.6a3.2 3.2 0 0 1 0 4.8M12.3 4a5.4 5.4 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button><button type="button" class="tool voice-btn" id="mic" title="Dictate" aria-label="Dictate"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2.5" width="4" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4 8a4 4 0 0 0 8 0M8 12v1.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>
+          <button class="send" id="send" aria-label="Send" title="Send" data-i18n-title="chat.send" data-i18n-aria="chat.send"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3.5M3.8 7.6 8 3.4l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </form>
+      <div class="composer-foot" id="composer-foot"><button type="button" class="foot-button" id="project-button" title="Project"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h4l1.2 1.4h5.8v6.6h-11z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><span id="project-button-label">Select project</span><svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="grow"></span><span class="foot-hint" id="foot-hint"></span></div>
+    </div>
+  </main>
+  <script nonce="{{NONCE}}">
+    const api = acquireVsCodeApi();
+    const micBtn = document.getElementById('mic'), speakBtn = document.getElementById('speak-toggle'); let voiceMode = 'idle', autoSpeak = !!((api.getState && api.getState()) || {}).autoSpeak;
+    function vt(key, fallback) { try { const value = typeof t === 'function' ? t(key) : ''; return value && value !== key ? value : fallback; } catch { return fallback; } }
+    function renderVoice() { if (!micBtn) return; micBtn.classList.toggle('recording', voiceMode === 'recording'); micBtn.classList.toggle('busy', voiceMode === 'transcribing' || voiceMode === 'starting'); micBtn.title = voiceMode === 'recording' ? vt('voice.recording', 'Listening… click again to finish') : voiceMode === 'starting' ? vt('voice.starting', 'Starting microphone…') : voiceMode === 'transcribing' ? vt('voice.transcribing', 'Transcribing…') : vt('voice.mic', 'Dictate'); micBtn.setAttribute('aria-label', micBtn.title); if (speakBtn) { speakBtn.setAttribute('aria-pressed', String(autoSpeak)); speakBtn.title = autoSpeak ? vt('voice.speakOn', 'Spoken answers on') : vt('voice.speakOff', 'Spoken answers off'); speakBtn.setAttribute('aria-label', speakBtn.title); } }
+    micBtn && micBtn.addEventListener('click', () => { if (voiceMode === 'transcribing' || voiceMode === 'starting') return; if (voiceMode === 'recording') { voiceMode = 'transcribing'; renderVoice(); api.postMessage({ type: 'voiceStop' }); } else { voiceMode = 'starting'; renderVoice(); api.postMessage({ type: 'voiceStart' }); } });
+    speakBtn && speakBtn.addEventListener('click', () => { autoSpeak = !autoSpeak; try { api.setState({ ...((api.getState && api.getState()) || {}), autoSpeak }); } catch {} if (!autoSpeak) api.postMessage({ type: 'stopSpeaking' }); renderVoice(); });
+    window.addEventListener('message', event => { const d = event.data || {}; if (d.type === 'voiceState') { voiceMode = d.state || 'idle'; renderVoice(); if (d.error) { try { setStatus(d.error); } catch {} } } if (d.type === 'voiceText' && d.text) { const p = document.getElementById('prompt'); p.value = (p.value ? p.value.trimEnd() + ' ' : '') + d.text; p.dispatchEvent(new Event('input', { bubbles: true })); p.focus(); } if (d.type === 'answer' && autoSpeak && d.text) api.postMessage({ type: 'speak', text: d.text }); if (d.type === 'language') setTimeout(renderVoice, 0); });
+    setTimeout(renderVoice, 0); function localizeCuetsEmpty() { if (typeof L !== 'function') return; const sub = document.getElementById('cuets-sub'); if (sub) sub.textContent = L('Plans the work, runs agents in parallel and reviews changes until verification passes.', 'İşi planlar, ajanları paralel çalıştırır ve doğrulama geçene kadar değişiklikleri inceler.'); const chips = [['Build a feature', 'Özellik geliştir', 'Build a new feature end to end: ', 'Yeni bir özelliği baştan sona geliştir: '], ['Understand project', 'Projeyi anla', 'Map this project and explain how it works: ', 'Bu projeyi haritala ve nasıl çalıştığını açıkla: '], ['Fix and test', 'Düzelt ve test et', 'Find and fix bugs, then run the tests: ', 'Hataları bul ve düzelt, sonra testleri çalıştır: '], ['Refactor', 'Yeniden düzenle', 'Refactor across files safely: ', 'Dosyalar arasında güvenle yeniden düzenle: ']]; document.querySelectorAll('.cuets-chip').forEach((chip, index) => { const item = chips[index]; if (!item) return; chip.textContent = L(item[0], item[1]); chip.dataset.prompt = L(item[2], item[3]); }); }
+    function showTrustNote(untrusted) { const prompt = document.getElementById('prompt'); let note = document.getElementById('trust-note'); if (!untrusted) { note?.setAttribute('hidden', ''); if (prompt) prompt.disabled = false; return; } if (!note && prompt) { note = document.createElement('div'); note.id = 'trust-note'; note.className = 'trust-note'; const text = document.createElement('span'); text.textContent = (typeof L === 'function' ? L('This folder is in Restricted Mode. Trust it so Cude AI can read your project and propose edits.', 'Bu klasör Kısıtlı Mod\'da. Cude AI\'ın projeyi okuyup değişiklik önerebilmesi için klasöre güvenin.') : 'This folder is in Restricted Mode.'); const button = document.createElement('button'); button.type = 'button'; button.textContent = (typeof L === 'function' ? L('Trust folder', 'Klasöre güven') : 'Trust folder'); button.addEventListener('click', () => api.postMessage({ type: 'trustFolder' })); const actions=document.createElement('div');actions.className='trust-actions';const models=document.createElement('button');models.type='button';models.className='trust-model';models.textContent=L('Choose model','Model seç');models.addEventListener('click',openModelFromTop);actions.append(button,models);note.append(text,actions); const composer = prompt.closest('.composer'); (composer?.parentElement || document.body).insertBefore(note, composer || null); } note?.removeAttribute('hidden'); } { let pending = null; document.addEventListener('pointerdown', event => { if (event.button !== 0 || document.hasFocus()) { pending = null; return; } const target = event.target; if (!(target instanceof Element)) return; const control = target.closest('button, [role=button], a, .surface, .cuets-chip, select, label'); const field = target.closest('textarea, input'); pending = { control, field, clicked: false }; const entry = pending; setTimeout(() => { if (pending !== entry || entry.clicked) return; pending = null; if (entry.field) entry.field.focus(); else if (entry.control) entry.control.click(); }, 180); }, true); document.addEventListener('click', event => { if (!pending) return; const node = event.target instanceof Node ? event.target : null; const owner = pending.control || pending.field; if (!owner || (node && owner.contains(node))) pending.clicked = true; }, true); } window.addEventListener('error', event => { try { api.postMessage({ type: 'webviewError', message: String(event.message || event.error || 'error').slice(0, 500), line: event.lineno || 0, column: event.colno || 0, stack: String(event.error && event.error.stack || '').slice(0, 1500) }); } catch {} });
+    function L(en, tr) { return (document.documentElement.lang || '').startsWith('tr') ? tr : en; }
+    let language = '{{LANG}}';
+    let dictionary = {{I18N}};
+    const t = key => dictionary[language]?.[key] || dictionary.en[key] || key;
+    function applyI18n() {
+      document.documentElement.lang = language;
+      document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-title]').forEach(element => { element.title = t(element.dataset.i18nTitle); });
+      document.querySelectorAll('[data-i18n-aria]').forEach(element => { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(element => { element.placeholder = t(element.dataset.i18nPlaceholder); });
+    }
+    applyI18n();
+    const form = document.getElementById('form');
+    const input = document.getElementById('prompt');
+    const history = document.getElementById('history');
+    const column = document.getElementById('column');
+    const send = document.getElementById('send');
+    const suggestions = document.getElementById('suggestions');
+    const emptyTemplate = document.getElementById('empty')?.cloneNode(true);
+    const cuetsEmptyTemplate = document.getElementById('cuets-empty')?.cloneNode(true);
+    const attachments = new Map();
+    const queuedMessages = [];
+    let lastSent = '';
+    let activeContext = null;
+    const slashCommands = [
+      { name: '/plan', label: t('chat.plan'), detail: t('slash.planDetail'), run: () => setMode('spec') },
+      { name: '/agent', label: t('chat.agent'), detail: t('slash.agentDetail'), run: () => setMode('agent') },
+      { name: '/clear', label: t('slash.clear'), detail: t('slash.clearDetail'), run: () => api.postMessage({ type: 'newChat', surface }) },
+      { name: '/compact', label: L('Summarize context','Bağlamı özetle'), detail: L('Condense a long chat into a short working summary','Uzun sohbeti kısa bir çalışma özetine dönüştür'), run: () => api.postMessage({type:'compact'}) },
+      { name: '/model', label: t('chat.model'), detail: t('slash.modelDetail'), run: () => modelOptions.length ? toggleMenu('model') : api.postMessage({ type: 'provider' }) },
+      { name: '/models', label: t('router.auto'), detail: t('slash.modelsDetail'), run: () => api.postMessage({ type: 'modelCatalog' }) },
+      { name: '/review', label: L('Review changes','Değişiklikleri incele'), detail: L('Open the latest diff view','Son diff görünümünü aç'), run: () => api.postMessage({ type: 'diff' }) },
+      { name: '/init', label: L('Initialize project memory','Proje hafızası başlat'), detail: L('Open .cude/memory.md','.cude/memory.md dosyasını aç'), run: () => api.postMessage({ type: 'memory' }) },
+      { name: '/search', label: t('chat.search'), detail: t('slash.searchDetail'), run: () => api.postMessage({ type: 'search' }) },
+      { name: '/history', label: L('History','Geçmiş'), detail: L('Open previous chats and agent runs','Önceki sohbetleri ve ajan işlerini aç'), run: () => api.postMessage({ type: 'history' }) },
+      { name: '/provider', label: L('Provider settings','Sağlayıcı ayarları'), detail: L('Manage model connections','Model bağlantılarını yönet'), run: () => api.postMessage({ type: 'provider' }) },
+      { name: '/skills', label: t('slash.skills'), detail: t('slash.skillsDetail'), run: () => api.postMessage({ type: 'skills' }) },
+      { name: '/mcp', label: L('MCP tools','MCP araçları'), detail: L('Discover and run configured tools','Yapılandırılmış araçları keşfet ve çalıştır'), run: () => api.postMessage({ type: 'mcp' }) },
+      { name: '/memory', label: L('Project memory','Proje hafızası'), detail: L('Open project decisions','Proje kararlarını aç'), run: () => api.postMessage({ type: 'memory' }) },
+      { name: '/rules', label: t('chat.rules'), detail: t('slash.rulesDetail'), run: () => api.postMessage({ type: 'rules' }) },
+      { name: '/mcp', label: L('MCP tools','MCP araçları'), detail: L('Manage MCP servers','MCP sunucularını yönet'), run: () => api.postMessage({ type: 'mcp' }) }
+    ];
+    let busy = false;
+    let mode = 'chat';
+    let explicitAgent = false;
+    let selectedSuggestion = 0;
+    let suggestionItems = [];
+    let searchTimer;
+    let wasBottom = true;
+    let permission = 'auto'; let awaitingAnswer = false;
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    function scrollBottom(smooth = true) { history.scrollTo({ top: history.scrollHeight, behavior: smooth ? 'smooth' : 'auto' }); }
+    history.addEventListener('scroll', () => { wasBottom = history.scrollHeight - history.scrollTop - history.clientHeight < 40; });
+    function clearEmpty() { document.getElementById('empty')?.remove(); document.querySelector('.shell')?.classList.remove('is-empty'); }
+    function setMode(next) {
+      mode = next;
+      explicitAgent = next === 'agent';
+      input.placeholder = mode === 'agent' ? t('chat.agentPrompt') : mode === 'spec' ? t('chat.planPrompt') : t('chat.prompt');
+      input.focus();
+    }
+    function renderSetupCard(show) {
+      let card = document.getElementById('setup-card');
+      if (!show) { card?.remove(); return; }
+      if (card) return;
+      card = document.createElement('div'); card.id = 'setup-card'; card.className = 'setup-card';
+      const title = document.createElement('strong'); title.textContent = L('Pick how Cude should think', 'Cude nasıl düşünsün, seç');
+      const text = document.createElement('p'); text.textContent = L('Connect a provider you already use, run a model on this PC, or link an agent app such as Claude Code, Codex or Claude Desktop.', 'Kullandığın bir sağlayıcıyı bağla, bu bilgisayarda bir model çalıştır ya da Claude Code, Codex veya Claude Desktop gibi bir ajan uygulamasını bağla.');
+      const row = document.createElement('div'); row.className = 'setup-actions';
+      for (const [focus, en, tr] of [['tab:providers', 'Connect a provider', 'Sağlayıcı bağla'], ['tab:local', 'Run a local model', 'Yerel model çalıştır'], ['tab:cli', 'Agents & apps', 'Ajanlar ve uygulamalar']]) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = focus === 'tab:providers' ? 'setup-primary' : 'setup-secondary'; b.textContent = L(en, tr);
+        b.onclick = () => api.postMessage({ type: 'openSetup', focus }); row.appendChild(b);
+      }
+      card.append(title, text, row);
+      document.querySelector('.composer-wrap')?.prepend(card);
+    }
+    function closeMenus() {
+      document.querySelectorAll('.menu-popover').forEach(menu => { menu.hidden = true; menu.classList.remove('from-top'); menu.style.top = ''; menu.style.left = ''; });
+      document.querySelectorAll('.tool-menu-button[aria-expanded="true"]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+    }
+    function populateMenu(menuId, items, selected, choose) {
+      const button = document.getElementById(`${menuId}-toggle`);
+      const label = document.getElementById(`${menuId}-label`);
+      const menu = document.getElementById(`${menuId}-options`);
+      const previousSearch = menuId === 'model' && document.activeElement === menu.querySelector('.model-search') ? document.activeElement : null;
+      menu.replaceChildren();
+      button.disabled = items.length === 0 && menuId !== 'model';
+      const current = items.find(item => item.value === selected);
+      label.textContent = current?.short || current?.label || (menuId === 'model' ? t('chat.model') : 'Select');
+      button.title = current?.detail || current?.label || button.getAttribute('aria-label');
+      let visibleItems = items;
+      if (menuId === 'model') {
+        const addProvider = { value: '__add_provider__', label: t('model.addProvider'), short: t('model.addProvider'), provider: '' };
+        const state = api.getState() || {}, recent = state.recentModels || [];
+        visibleItems = [...items].sort((a, b) => (a.value==='__add_provider__'?2:a.section?1:0)-(b.value==='__add_provider__'?2:b.section?1:0)||((recent.indexOf(a.value) < 0 ? 999 : recent.indexOf(a.value)) - (recent.indexOf(b.value) < 0 ? 999 : recent.indexOf(b.value))));
+        const search = document.createElement('input'); search.className = 'model-search'; search.type = 'search'; search.placeholder = t('model.search'); search.setAttribute('aria-label', t('model.search')); search.value = modelSearchQuery;
+        search.addEventListener('input', () => { modelSearchQuery = search.value; renderModelOptions(); }); search.addEventListener('click', event => event.stopPropagation()); menu.appendChild(search);
+        search.addEventListener('keydown', event => {
+          if (event.isComposing) return;
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            menu.querySelector('.menu-option')?.focus();
+          } else if (event.key === 'Enter') {
+            event.preventDefault();
+            menu.querySelector('[data-model-selectable]')?.click();
+          }
+        });
+        if (previousSearch) { search.focus(); search.setSelectionRange(previousSearch.selectionStart, previousSearch.selectionEnd, previousSearch.selectionDirection); }
+        const query = modelSearchQuery.trim().toLowerCase(); if (query) visibleItems = visibleItems.filter(item => `${item.label} ${item.provider || ''} ${item.detail || ''}`.toLowerCase().includes(query));
+        visibleItems.push(addProvider);
+      }
+      let keyRequired;
+      if (menuId === 'model') {
+        const count = visibleItems.filter(item => item.setup).length;
+        if (count) {
+          keyRequired = document.createElement('details');
+          keyRequired.open = modelKeySectionOpen || Boolean(modelSearchQuery.trim());
+          const heading = document.createElement('summary');
+          heading.className = 'menu-section';
+          heading.textContent = L(`Available with a free key (${count})`, `Ücretsiz anahtarla kullanılabilir (${count})`);
+          heading.addEventListener('click', () => { modelKeySectionOpen = !keyRequired.open; });
+          keyRequired.appendChild(heading);
+        }
+        visibleItems = [...visibleItems.filter(item => !item.setup), ...visibleItems.filter(item => item.setup)];
+      }
+      for (const item of visibleItems) {
+        const option = document.createElement('button'); option.type = 'button'; option.className = 'menu-option'; option.setAttribute('role', 'menuitemradio'); option.setAttribute('aria-checked', String(item.value === selected));
+        if (menuId === 'model' && item.value !== '__add_provider__' && !item.setup) option.setAttribute('data-model-selectable', '');
+        const copy = document.createElement('span'); copy.className = 'menu-option-copy';
+        const title = document.createElement('span'); title.textContent = item.label; copy.appendChild(title);
+        if (item.detail) { const detail = document.createElement('small'); detail.textContent = item.detail; copy.appendChild(detail); }
+        option.appendChild(copy); let picked = false; const pick = () => { if (picked) return; picked = true; choose(item); closeMenus(); }; option.addEventListener('pointerdown', event => { if (event.button === 0) { event.preventDefault(); pick(); } }); option.addEventListener('click', pick); (item.setup && keyRequired ? keyRequired : menu).appendChild(option);
+      }
+      if (keyRequired) menu.appendChild(keyRequired);
+    }
+    function toggleMenu(menuId) {
+      const button = document.getElementById(`${menuId}-toggle`), menu = document.getElementById(`${menuId}-options`);
+      const open = menu.hidden; closeMenus(); menu.hidden = !open; button.setAttribute('aria-expanded', String(open));
+    }
+    const permissionOptions = [
+      { value: 'ask', label: t('permission.ask'), short: t('permission.askShort'), detail: t('permission.askDetail'), mode: 'chat' },
+      { value: 'auto', label: t('permission.auto'), short: t('permission.autoShort'), detail: t('permission.autoDetail'), mode: 'agent' },
+      { value: 'plan', label: t('permission.plan'), short: t('permission.planShort'), detail: t('permission.planDetail'), mode: 'spec' },
+      { value: 'full', label: t('permission.full'), short: t('permission.fullShort'), detail: t('permission.fullDetail'), mode: 'agent' }
+    ];
+    document.addEventListener('pointerdown', event => { if (event.button === 0 && event.target.closest && event.target.closest('#model-chip')) { event.preventDefault(); event.stopPropagation(); openModelFromTop(); } }, true); document.addEventListener('click', event => { if (event.target.closest && event.target.closest('#model-chip')) { event.stopPropagation(); event.preventDefault(); } }, true); document.addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && event.target.closest && event.target.closest('#model-chip')) { event.preventDefault(); openModelFromTop(); } if (event.key === 'Escape') closeMenus(); }); document.addEventListener('pointerdown', event => { const menu = document.getElementById('model-options'); if (menu && !menu.hidden && !menu.contains(event.target) && !(event.target.closest && event.target.closest('#model-chip, .tool-menu'))) closeMenus(); }, true); window.addEventListener('blur', () => { const menu = document.getElementById('model-options'); if (menu && !menu.hidden) closeMenus(); });
+    const SEND_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3.5M3.8 7.6 8 3.4l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const SEND_STOP = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4.5" y="4.5" width="7" height="7" rx="1.6" fill="currentColor"/></svg>';
+    function startCloneOriginal() {
+      const intro = L('Clone & make original\nReference (URL, repository, screenshot or description): \n\nStudy what the reference does and how it is structured, then build an original version in this project with its own name, design, colors, texts and code. Do not copy the reference brand, logo, images, text or source code; keep only the ideas and the user experience goals.',
+        'Klonla ve özgünleştir\nReferans (adres, depo, ekran görüntüsü veya açıklama): \n\nReferansın ne yaptığını ve nasıl kurulduğunu incele, sonra bu projede kendi adı, tasarımı, renkleri, metinleri ve koduyla özgün bir sürüm kur. Referansın markasını, logosunu, görsellerini, metinlerini ve kaynak kodunu kopyalama; yalnız fikirleri ve kullanıcı deneyimi hedeflerini koru.');
+      input.value = intro + (input.value.trim() ? '\n\n' + input.value : '');
+      const caret = intro.indexOf('\n', intro.indexOf('\n') + 1);
+      resizeInput(); input.focus(); try { input.setSelectionRange(caret, caret); } catch {}
+    }
+    function openAddMenu() {
+      const menu = document.getElementById('add-options'); if (!menu) return;
+      if (!menu.hidden) { closeMenus(); return; }
+      closeMenus(); menu.replaceChildren();
+      const items = [
+        { icon: 'M3 3.5h6.5L13 7v5.5H3z M9.5 3.5V7H13', title: L('Files and folders', 'Dosyalar ve klasörler'), detail: L('Pick from this project', 'Bu projeden seç'), run: () => api.postMessage({ type: 'attach', action: 'file' }) },
+        { icon: 'M2.5 3.5h11v9h-11z M2.5 10l3-3 3 3 2-2 3 3', title: L('Image', 'Görsel'), detail: L('Screenshot or design', 'Ekran görüntüsü veya tasarım'), run: () => imagePicker.click() },
+        { icon:'M3 4h10v8H3z M3 9h10',title:L('Android tools','Android araçları'),detail:L('Build, install, emulator and Logcat','Derle, yükle, emülatör ve Logcat'),run:()=>api.postMessage({type:'attach',action:'android'}) },
+        { icon:'M8 2l6 3v6l-6 3-6-3V5z M2 5l6 3 6-3 M8 8v6',title:L('Image to 3D (Three.js)','Görselden 3D (Three.js)'),detail:L('Make a procedural model','Prosedürel model oluştur'),run:()=>api.postMessage({type:'attach',action:'imageToThree'}) },
+        { icon: 'M5 3.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM5 6.5v6M11 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 9.5c0-3-6-1-6-3', title: L('Clone a repository', 'Depo klonla'), detail: L('Bring a Git repo into Cude', 'Bir Git deposunu Cude\'a al'), run: () => api.postMessage({ type: 'attach', action: 'clone' }) },
+        { icon: 'M2.5 5.5h7v7h-7z M6.5 5.5V3.5h7v7h-4 M11.5 1.8v1.4M10.8 2.5h1.4', title: L('Clone & make original', 'Klonla ve özgünleştir'), detail: L('Rebuild a reference as your own', 'Bir referansı kendine ait yeniden kur'), run: () => startCloneOriginal() },
+        { icon: 'M4 3.5h8v9H4z M6 6h4M6 8.5h4', title: L('Project rules', 'Proje kuralları'), detail: '.cude/rules.md', run: () => api.postMessage({ type: 'rules' }) },
+        { icon: 'M8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3zm0 2.5V8l1.8 1.2', title: L('Project memory', 'Proje hafızası'), detail: '.cude/memory.md', run: () => api.postMessage({ type: 'memory' }) }
+      ];
+      for (const item of items) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'menu-option add-option';
+        b.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="' + item.icon + '" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const copy = document.createElement('span'); copy.className = 'menu-option-copy'; const t1 = document.createElement('span'); t1.textContent = item.title; const t2 = document.createElement('small'); t2.textContent = item.detail; copy.append(t1, t2); b.appendChild(copy);
+        b.addEventListener('click', event => { event.stopPropagation(); closeMenus(); item.run(); }); menu.appendChild(b);
+      }
+      menu.hidden = false;
+    }
+    const imagePicker = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', multiple: true, hidden: true });
+    document.body.appendChild(imagePicker);
+    imagePicker.addEventListener('change', () => { const files = [...imagePicker.files]; imagePicker.value = ''; if (!files.length) return; const dt = new DataTransfer(); files.forEach(f => dt.items.add(f)); input.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+    function openModelFromTop() {
+      const chip = document.getElementById('model-chip'), menu = document.getElementById('model-options'); if (!chip || !menu) return;
+      if (!window.__cudeModelsLoaded) { const c = document.getElementById('model-chip-label'); if (c) c.textContent = L('Loading models…', 'Modeller yükleniyor…'); return; }
+      const wasOpen = !menu.hidden && menu.classList.contains('from-top'); closeMenus(); if (wasOpen) return;
+      if (menu.parentElement !== document.body) document.body.appendChild(menu); refreshModelMenu(); const r = chip.getBoundingClientRect();
+      menu.classList.add('from-top'); menu.style.top = Math.round(r.bottom + 6) + 'px'; menu.style.left = Math.round(Math.max(8, Math.min(r.left, window.innerWidth - 268))) + 'px';
+      menu.hidden = false; document.getElementById('model-toggle')?.setAttribute('aria-expanded', 'true');
+      menu.querySelector('.model-search')?.focus();
+    }
+    let surface = 'ai';
+    const transcripts = { ai: { nodes: [], scroll: 0, lastSent: '' }, cuets: { nodes: [document.getElementById('cuets-empty')], scroll: 0, lastSent: '' } };
+    transcripts.cuets.nodes[0].remove();
+    let sentMessage;
+    function setSurface(next, reason) {
+      if (next === surface) return;
+      const from = transcripts[surface], to = transcripts[next];
+      const transferred = reason && busy && sentMessage?.parentElement === column ? sentMessage : undefined;
+      transferred?.remove();
+      if (transferred && surface === 'ai' && !column.querySelector('.message, #empty')) column.prepend(emptyTemplate.cloneNode(true));
+      document.getElementById('live-status')?.remove();
+      from.nodes = [...column.childNodes]; from.scroll = history.scrollTop; from.lastSent = lastSent;
+      surface = next;
+      column.replaceChildren(...to.nodes);
+      lastSent = to.lastSent;
+      document.querySelectorAll('.surface').forEach(b => { const active=b.dataset.surface===next; b.classList.toggle('active',active); b.setAttribute('aria-pressed',String(active)); });
+      const shell = document.querySelector('.shell');
+      shell.classList.toggle('cuets', next === 'cuets');
+      if (reason) {
+        const note = document.createElement('div');
+        note.className = 'surface-note';
+        note.textContent = (next === 'cuets' ? L('Switched to Cuets', 'Cuets\'e geçildi') : L('Back to Cude AI', 'Cude AI\'a dönüldü')) + ' — ' + reason;
+        column.appendChild(note);
+      }
+      if (transferred) { column.appendChild(transferred); lastSent = transferred.textContent; }
+      shell.classList.toggle('is-empty', !column.querySelector('.message, .cuets-progress'));
+      input.placeholder = next === 'cuets' ? L('Describe a task for Cuets…', 'Cuets için bir görev yaz…') : t('chat.prompt');
+      document.getElementById('foot-hint').textContent = next === 'cuets' ? L('Multi-agent', 'Çok ajanlı') : '';
+      localizeCuetsEmpty();
+      applyI18n();
+      history.scrollTop = to.scroll;
+    }
+    document.addEventListener('click', event => { const b = event.target.closest && event.target.closest('.surface'); if (b && !busy) setSurface(b.dataset.surface); });
+    window.addEventListener('message', event => { const d = event.data || {}; if (d.type === 'surface' && (d.value === 'cuets' || d.value === 'ai')) setSurface(d.value, d.reason || ''); });
+    function syncModeFromPermission() { const option = permissionOptions.find(item => item.value === permission); if (option) { mode = option.mode; if (!input.placeholder.startsWith('Start')) input.placeholder = mode === 'spec' ? t('chat.planPrompt') : mode === 'agent' ? t('chat.agentPrompt') : t('chat.prompt'); } document.getElementById('permission-toggle')?.setAttribute('data-level', permission); }
+    const effortOptions = [{ value: 'düşük', label: t('effort.low') }, { value: 'orta', label: t('effort.medium') }, { value: 'yüksek', label: t('effort.high') }];
+    let effort = '';
+    let selectedModel = ''; function cudeShort(m) { return String(m || '').replace(/\.gguf$/i, '').replace(/-GGUF-.*$/i, '').replace(/^.*\//, ''); }
+    let modelOptions = [];
+    let modelSearchQuery = '';
+    let modelKeySectionOpen = false;
+    function renderModelOptions() {
+      populateMenu('model', modelOptions, selectedModel, item => {
+        if (item.value === '__add_provider__') { api.postMessage({type: 'provider'}); return; }
+        const {providerId, model} = JSON.parse(decodeURIComponent(item.value));
+        if (item.setup) {
+          api.postMessage({type: 'providerModel', providerId, model, providerName: item.provider || ''});
+          return;
+        }
+        selectedModel = item.value;
+        const state = api.getState() || {};
+        state.recentModels = [item.value, ...(state.recentModels || []).filter(value => value !== item.value)].slice(0, 8);
+        api.setState(state);
+        refreshModelMenu();
+        input.placeholder = t('chat.prompt');
+        input.focus();
+        api.postMessage({type: 'providerModel', providerId, model, effort});
+      });
+    }
+    let routeForAnswer = null;
+    function renderPermissionMenu() {
+      populateMenu('permission', permissionOptions, permission, item => { permission = item.value; renderPermissionMenu(); api.postMessage({ type: 'permission', value: permission }); }); syncModeFromPermission();
+    }
+    function renderEffortMenu() {
+      const advertised = modelOptions.find(item => item.value === selectedModel)?.efforts || [];
+      const wire = {'düşük':'low','orta':'medium','yüksek':'high'};
+      const options = [{value:'',label:L('Default','Varsayılan')},...effortOptions.filter(item=>advertised.includes(wire[item.value]))];
+      if(!options.some(item=>item.value===effort))effort='';
+      populateMenu('effort', options, effort, item => { effort = item.value; renderEffortMenu(); api.postMessage({ type: 'effort', value: effort }); });
+    }
+    function syncModelChip() { const cur = modelOptions.find(item => item.value === selectedModel); const chip = document.getElementById('model-chip-label'); if (chip) { chip.textContent = cur ? cur.short : (modelOptions.length ? L('Select model', 'Model seç') : L('Connect provider', 'Sağlayıcı bağla')); chip.parentElement.title = cur ? (cur.provider ? cur.provider + ' · ' : '') + cur.short : ''; } document.getElementById('model-chip')?.classList.toggle('no-model', !cur); }
+    function refreshModelMenu() {
+      renderEffortMenu();
+      setTimeout(syncModelChip, 0);
+      renderModelOptions();
+    }
+    renderPermissionMenu();
+    renderEffortMenu();
+    document.getElementById('permission-toggle').onclick = () => toggleMenu('permission');
+    document.getElementById('model-toggle').onclick = () => toggleMenu('model');
+    document.getElementById('effort-toggle').onclick = () => toggleMenu('effort');
+    document.addEventListener('click', event => { if (!event.target.closest('.tool-menu')) closeMenus(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenus(); });
+    function addUser(text) { clearEmpty(); const element = document.createElement('article'); element.className = 'message user'; element.dataset.text = text; const body = document.createElement('div'); body.className = 'msg-text'; body.textContent = text; element.appendChild(body); column.appendChild(element); decorateMessage(element); if (wasBottom) scrollBottom(); return element; }
+    // Message actions: copy, edit, retry and branch. Turns are addressed from the end so trimmed history stays aligned.
+    const ICON = {
+      copy: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 3.2V3a1 1 0 0 0-1-1H3.4a1 1 0 0 0-1 1v6.1a1 1 0 0 0 1 1h.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
+      edit: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.8 2.6l2.6 2.6-7.6 7.6-3.3.7.7-3.3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9.4 4l2.6 2.6" stroke="currentColor" stroke-width="1.3"/></svg>',
+      retry: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11.8 1.8v2.9H8.9" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      branch: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="4.5" cy="3.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="12.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="11.5" cy="5.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.1v5.8M11.5 7.1c0 2.6-2.4 3.1-5.5 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
+      check: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+    const userFromEnd = el => { const users = [...column.querySelectorAll('.message.user')]; return users.length - users.indexOf(el); };
+    const userBefore = el => { let n = el.previousElementSibling; while (n && !n.classList.contains('user')) n = n.previousElementSibling; return n; };
+    const messageText = el => el.classList.contains('user') ? (el.dataset.text || el.querySelector('.msg-text')?.textContent || '') : (el.dataset.raw || [...el.childNodes].filter(n => !(n.classList && n.classList.contains('msg-actions'))).map(n => n.textContent).join('').trim());
+    const removeFrom = el => { let n = el; while (n) { const next = n.nextElementSibling; n.remove(); n = next; } if (!column.querySelector('.message')) column.replaceChildren(emptyTemplate.cloneNode(true)); };
+    function actionButton(kind, label, run) { const b = document.createElement('button'); b.type = 'button'; b.className = 'msg-act'; b.dataset.kind = kind; b.title = label; b.setAttribute('aria-label', label); b.innerHTML = ICON[kind]; b.onclick = event => { event.stopPropagation(); run(b); }; return b; }
+    function decorateMessage(el) {
+      if (!el || el.querySelector(':scope > .msg-actions') || surface === 'cuets') return;
+      if (el.classList.contains('assistant') && el.dataset.done !== '1') return;
+      const bar = document.createElement('div'); bar.className = 'msg-actions';
+      bar.appendChild(actionButton('copy', L('Copy', 'Kopyala'), b => { api.postMessage({ type: 'copyText', text: messageText(el) }); b.innerHTML = ICON.check; b.classList.add('ok'); setTimeout(() => { b.innerHTML = ICON.copy; b.classList.remove('ok'); }, 1400); }));
+      if (el.classList.contains('user')) {
+        bar.appendChild(actionButton('edit', L('Edit and resend', 'Düzenle ve yeniden gönder'), () => { if (busy) api.postMessage({ type: 'stop' }); const text = messageText(el); api.postMessage({ type: 'rewind', fromEnd: userFromEnd(el) }); removeFrom(el); input.value = text; input.dispatchEvent(new Event('input')); input.focus(); input.setSelectionRange(text.length, text.length); }));
+        bar.appendChild(actionButton('branch', L('Branch into a new chat from here', 'Buradan yeni dal aç'), () => { api.postMessage({ type: 'branch', fromEnd: userFromEnd(el), includeReply: false, text: messageText(el) }); }));
+      } else {
+        const prev = userBefore(el);
+        if (prev) bar.appendChild(actionButton('retry', L('Regenerate', 'Yeniden üret'), () => { if (busy) return; const text = messageText(prev); api.postMessage({ type: 'rewind', fromEnd: userFromEnd(prev) }); removeFrom(prev); sendPayload(text, [], mode); }));
+        if (prev) bar.appendChild(actionButton('branch', L('Branch into a new chat with this answer', 'Bu yanıtla yeni dal aç'), () => { api.postMessage({ type: 'branch', fromEnd: userFromEnd(prev), includeReply: true }); }));
+      }
+      el.appendChild(bar);
+    }
+    new MutationObserver(() => { column.querySelectorAll('.message.assistant[data-done="1"]').forEach(el => { if (!el.querySelector(':scope > .msg-actions')) decorateMessage(el); }); }).observe(column, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-done'] });
+    function addAssistant() { clearEmpty(); const element = document.createElement('article'); element.className = 'message assistant'; const modelName = document.getElementById('model-label')?.textContent || ''; if (modelName && modelName !== L('Select model','Model seç')) element.dataset.model = modelName; column.appendChild(element); if (wasBottom) scrollBottom(); return element; }
+    function highlight(code, language) {
+      const lang = String(language || '').toLowerCase().split(/[ +.-]/)[0];
+      if (lang === 'diff' || lang === 'patch') return code.split('\n').map(line => {
+        const kind = line.startsWith('+') && !line.startsWith('+++') ? 'added' : line.startsWith('-') && !line.startsWith('---') ? 'removed' : '';
+        return kind ? `<span class="tok-${kind}">${escapeHtml(line)}</span>` : escapeHtml(line);
+      }).join('\n');
+      const keywords = new Set((({
+        js: 'const let var function return if else for while class extends new this try catch throw async await import export from default true false null undefined typeof instanceof switch case break continue',
+        javascript: 'const let var function return if else for while class extends new this try catch throw async await import export from default true false null undefined typeof instanceof switch case break continue',
+        ts: 'const let var function return if else for while class extends new this try catch throw async await import export from default true false null undefined type interface enum public private readonly implements as keyof',
+        typescript: 'const let var function return if else for while class extends new this try catch throw async await import export from default true false null undefined type interface enum public private readonly implements as keyof',
+        py: 'def class return if elif else for while in is not and or import from as async await try except finally raise with lambda yield True False None self',
+        python: 'def class return if elif else for while in is not and or import from as async await try except finally raise with lambda yield True False None self',
+        rs: 'fn pub use mod struct impl enum trait type let mut const static ref self Self return if else for while in match loop move async await unsafe where crate super true false Some None Ok Err',
+        rust: 'fn pub use mod struct impl enum trait type let mut const static ref self Self return if else for while in match loop move async await unsafe where crate super true false Some None Ok Err',
+        json: 'true false null',
+        sh: 'if then else elif fi for in do done case esac function local export return sudo cd echo printf read exit',
+        bash: 'if then else elif fi for in do done case esac function local export return sudo cd echo printf read exit'
+      })[lang] || 'const let var function return if else for while class interface type import export from async await new true false null undefined fn pub use struct impl match enum def self None True False').split(/\s+/));
+      const pattern = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*|--[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b[A-Za-z_$][\w$]*\b|\b\d+(?:\.\d+)?\b|=>|===?|!==?|<=|>=|&&|\|\||[{}()[\].,:;])/g;
+      let output = '';
+      let last = 0;
+      for (const match of code.matchAll(pattern)) {
+        const value = match[0];
+        const index = match.index || 0;
+        output += escapeHtml(code.slice(last, index));
+        const next = code.slice(index + value.length).match(/^\s*:/);
+        const kind = value.startsWith('//') || value.startsWith('#') || value.startsWith('/*') || value.startsWith('--') ? 'comment' : /^['"`]/.test(value) ? (lang === 'json' && next ? 'property' : 'string') : /^\d/.test(value) ? 'number' : keywords.has(value) ? 'keyword' : /^[A-Z]/.test(value) ? 'type' : '';
+        output += kind ? `<span class="tok-${kind}">${escapeHtml(value)}</span>` : escapeHtml(value);
+        last = index + value.length;
+      }
+      return output + escapeHtml(code.slice(last));
+    }
+    function renderInline(value) {
+      let html = value.replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/(^|[\s(])((?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]+)(?::(\d+))?(?=$|[\s),;])/g, (whole, before, file, line) => `${before}<button class="file-link" data-file="${encodeURIComponent(file)}" data-line="${line || ''}">${file}${line ? `:${line}` : ''}</button>`);
+      return html;
+    }
+    function renderMarkdown(source) {
+      const blocks = [];
+      let value = source.replace(/```([^\n]*)\n([\s\S]*?)```/g, (_, language, code) => `@@BLOCK${blocks.push({ language: language.trim() || 'code', code }) - 1}@@`);
+      value = escapeHtml(value);
+      value = value.replace(/^### (.+)$/gm, '<h3>$1</h3>').replace(/^## (.+)$/gm, '<h2>$1</h2>').replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      value = value.split(/\n{2,}/).map(paragraph => {
+        if (/^<h[1-3]>/.test(paragraph)) return paragraph;
+        const rows = paragraph.split('\n');
+        if (rows.every(row => /^\s*[-*] /.test(row))) return `<ul>${rows.map(row => `<li>${renderInline(row.replace(/^\s*[-*] /, ''))}</li>`).join('')}</ul>`;
+        if (rows.every(row => /^\s*\d+\. /.test(row))) return `<ol>${rows.map(row => `<li>${renderInline(row.replace(/^\s*\d+\. /, ''))}</li>`).join('')}</ol>`;
+        return `<p>${rows.map(renderInline).join('<br>')}</p>`;
+      }).join('');
+      return value.replace(/@@BLOCK(\d+)@@/g, (_, index) => {
+        const block = blocks[Number(index)];
+        if (!block) return escapeHtml(_);
+        const pathMatch=block.language.match(/(?:^|\s)path=(?:"([^"]+)"|'([^']+)'|([^\s]+))/i),filePath=pathMatch?.[1]||pathMatch?.[2]||pathMatch?.[3]||'';
+        const encodedPath=encodeURIComponent(filePath),encodedCode=encodeURIComponent(block.code);
+        const actions=filePath?`<button class="copy" data-preview-code="${encodedPath}" data-code="${encodedCode}">${t('chat.preview')}</button><button class="copy" data-new-code="${encodedPath}" data-code="${encodedCode}">${t('chat.newFile')}</button><button class="copy" data-apply-code="${encodedPath}" data-code="${encodedCode}">${t('chat.apply')}</button>`:'';
+        const headPath = (block.language.match(/path=(\S+)/) || [])[1]; const headLang = block.language.split(/\s+/)[0]; return `<div class="code"><div class="code-head"><span class="code-label">${headPath ? `<span class="code-path" title="${escapeHtml(headPath)}">${escapeHtml(headPath)}</span>` : ""}<span class="code-lang">${escapeHtml(headLang)}</span></span><span class="code-actions">${actions}<button class="copy" data-copy="${encodeURIComponent(block.code)}">${typeof L === 'function' ? L('Copy','Kopyala') : 'Copy'}</button></span></div><pre><code>${highlight(block.code, block.language)}</code></pre></div>`;
+      });
+    }
+    function iconMarkup(kind) {
+      const paths = {
+        file: '<path d="M4 1.8h5l3 3V14H4zM9 1.8v3h3M6 8h4M6 10.5h4"/>',
+        search: '<circle cx="6.8" cy="6.8" r="3.8"/><path d="m9.7 9.7 3 3"/>',
+        terminal: '<rect x="1.5" y="2.2" width="11" height="9.5" rx="1.5"/><path d="m4 5 2 2-2 2m4 .1h2"/>',
+        plan: '<path d="M5 3.2h7M5 7.8h7M5 12.4h7M2.2 3.2h.1M2.2 7.8h.1M2.2 12.4h.1"/>'
+      };
+      return `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[kind] || paths.plan}</svg>`;
+    }
+    function addActivity(label, detail = '', duration = '') {
+      column.querySelectorAll('.activity.running').forEach(previous => { previous.classList.remove('running'); previous.classList.add('done'); });
+      const item = document.createElement('details'); item.className = 'activity';
+      const running = /arıyor|hazırlanıyor|başladı|yürütülüyor|çalışıyor|planlıyor|inceliyor|^planning$|^reviewing$|^(?:agent|ajan) \d+:/i.test(label);
+      item.classList.add(running ? 'running' : 'done');
+      const summary = document.createElement('summary');
+      const source = `${label} ${detail}`.toLowerCase();
+      const iconKind = /terminal|komut|command|cude-core\.run/.test(source) ? 'terminal' : /arama|arıyor|grep|find_files|search/.test(source) ? 'search' : /dosya|file|read|edited/.test(source) ? 'file' : 'plan';
+      const icon = document.createElement('span'); icon.className = 'activity-icon'; icon.innerHTML = iconMarkup(iconKind);
+      const title = document.createElement('span'); title.className = 'activity-label'; title.textContent = label;
+      summary.append(icon, title);
+      if (duration) { const time = document.createElement('span'); time.className = 'duration'; time.textContent = duration; summary.appendChild(time); }
+      item.appendChild(summary);
+      if (detail) { const content = document.createElement('div'); content.className = 'activity-content'; content.textContent = detail; item.appendChild(content); }
+      column.appendChild(item); if (wasBottom) scrollBottom();
+    }
+    function setStatus(text) {
+      document.getElementById('live-status')?.remove();
+      if (!text) return;
+      const item = document.createElement('div'); item.id = 'live-status'; item.className = 'status';
+      item.innerHTML = '<span class="status-dot"></span><span></span>'; item.lastElementChild.textContent = text;
+      column.appendChild(item); if (wasBottom) scrollBottom();
+    }
+    function startAnswer() {
+      awaitingAnswer = true;
+      busy = true; send.classList.add('stop'); send.innerHTML = SEND_STOP; { const stopLabel = (document.documentElement.lang || '').startsWith('tr') ? 'Durdur' : 'Stop'; send.setAttribute('aria-label', stopLabel); send.title = stopLabel; }
+      document.querySelectorAll('.surface').forEach(button => { button.disabled = true; });
+    }
+    function sendPayload(text, files, sendMode = mode, alreadyVisible = false, extra = '', includeActive = true, images = [], useAgent = explicitAgent) {
+      startAnswer();
+      mode = sendMode; sentMessage = alreadyVisible || addUser(text); setStatus(mode === 'agent' ? t('status.inspecting') : mode === 'spec' ? t('status.planPreparing') : t('status.answerPreparing'));
+      const viaCuets = surface === 'cuets'; api.postMessage({ type: viaCuets ? 'agent' : mode, cuets: viaCuets, autoCuets: surface === 'ai', explicitAgent: useAgent, text: extra ? `${text}\n\n${extra}` : text, permission, attachments: files, includeActive, images });
+    }
+    async function submit(fromButton = false) {
+      if (busy && fromButton) { api.postMessage({ type: 'stop' }); return; }
+      const text = input.value.trim();
+      if (!text) return;
+      if (!selectedModel) { setStatus(modelOptions.length ? t('chat.chooseModelFirst') : t('chat.addProviderFirst')); openModelFromTop(); return; }
+      const files = [...attachments].filter(([,item])=>item?.projectFile).map(([key])=>key);const extras=[],images=[];for(const [key,item] of attachments){if(item?.content)extras.push(`### ${item.label}\n${item.content.slice(0,20000)}`);else if(item?.file&&!item.file.type.startsWith('image/')){try{extras.push(`### ${item.label}\n${(await item.file.text()).slice(0,20000)}`);}catch{}}else if(item?.file?.type.startsWith('image/')){if(item.file.size>4*1024*1024){extras.push(L(`[Image skipped: ${item.label}; file exceeds 4 MB]`, `[Görsel atlandı: ${item.label}; dosya 4 MB sınırını aşıyor.]`));continue;}try{const dataUrl=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(item.file);});images.push({name:item.label,dataUrl});}catch{}}}const extra=extras.join('\n\n');lastSent=text;
+      const includeActive=attachments.has('__active');if (busy) { queuedMessages.push({ text, files, mode, extra, includeActive, images, surface, explicitAgent, node: addUser(text) }); const count=document.getElementById('queue-count');count.hidden=false;count.textContent=t('status.queueCount').replace('{count}',String(queuedMessages.length)); }
+      else sendPayload(text, files, mode, false, extra, includeActive, images);
+      explicitAgent = false;
+      attachments.clear(); drawAttachments(); input.value = ''; resizeInput();
+    }
+    function finish() { column.querySelectorAll('.activity.running').forEach(item => { item.classList.remove('running'); item.classList.add('done'); }); setStatus(''); if(queuedMessages.length){const next=queuedMessages.shift();setTimeout(()=>{setSurface(next.surface);sendPayload(next.text,next.files,next.mode,next.node,next.extra,next.includeActive,next.images,next.explicitAgent);},0);const count=document.getElementById('queue-count');count.textContent=queuedMessages.length?t('status.queueCount').replace('{count}',String(queuedMessages.length)):'';count.hidden=!queuedMessages.length;return;}busy=false;sentMessage=undefined;document.querySelectorAll('.surface').forEach(button => { button.disabled = false; });send.classList.remove('stop');send.innerHTML=SEND_ICON;send.setAttribute('aria-label',t('chat.send'));send.title=t('chat.send'); }
+    function resizeInput() { input.style.height = 'auto'; input.style.height = `${Math.min(input.scrollHeight, Math.floor(innerHeight * .4), 240)}px`; }
+    function hideSuggestions() { suggestions.hidden = true; suggestionItems = []; }
+    function drawSuggestions(items) {
+      suggestionItems = items; selectedSuggestion = 0;
+      suggestions.replaceChildren();
+      items.forEach((item, index) => {
+        const button = document.createElement('button'); button.type = 'button'; button.className = `suggestion${index === 0 ? ' active' : ''}`; button.setAttribute('role', 'option');
+        const label=String(item.label||''),query=String(item.highlight||''),match=query?label.toLocaleLowerCase().indexOf(query.toLocaleLowerCase()):-1;button.innerHTML = `<span>${match>=0?`${escapeHtml(label.slice(0,match))}<mark>${escapeHtml(label.slice(match,match+query.length))}</mark>${escapeHtml(label.slice(match+query.length))}`:escapeHtml(label)}</span><small>${escapeHtml(item.detail || '')}</small>`;
+        button.addEventListener('mousedown', event => event.preventDefault()); button.addEventListener('click', () => item.run()); suggestions.appendChild(button);
+      });
+      suggestions.hidden = !items.length;
+    }
+    function drawAttachments() {
+      const holder = document.getElementById('context'); holder.replaceChildren();
+      for (const [path, item] of attachments) {
+        const chip = document.createElement('span'); chip.className = 'context-chip';
+        const text = document.createElement('span'); text.textContent = typeof item==='string'?item:item.label;
+        const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.title = L(`Remove ${text.textContent}`, `${text.textContent} bağlamını kaldır`); remove.setAttribute('aria-label', L('Remove context','Bağlamı kaldır')); remove.onclick = () => { attachments.delete(path); if(path==='__active')activeContext=null;drawAttachments(); };
+        chip.append(text, remove); holder.appendChild(chip);
+      }
+    }
+    function completeSlash(command) { hideSuggestions(); const start = input.value.lastIndexOf('/'); input.value = input.value.slice(0, start); resizeInput(); command.run(); }
+    document.getElementById('new').onclick = () => api.postMessage({ type: 'newChat', surface });
+    document.getElementById('thread').onclick = () => api.postMessage({ type: 'history' });
+    document.getElementById('provider').onclick = () => api.postMessage({ type: 'settingsMenu' });
+    document.getElementById('add').onclick = event => { event.stopPropagation(); openAddMenu(); };
+    document.getElementById('project-button').onclick = () => api.postMessage({ type: 'openProject' });
+    document.querySelectorAll('.cuets-chip').forEach(chip => chip.addEventListener('click', () => { input.value = chip.dataset.prompt || ''; input.focus(); input.dispatchEvent(new Event('input')); }));
+    form.addEventListener('submit', event => { event.preventDefault(); hideSuggestions(); submit(event.submitter === send); });
+    input.addEventListener('paste', event => {const items=[...(event.clipboardData?.items||[])],images=items.filter(item=>item.type.startsWith('image/'));if(images.length){event.preventDefault();for(const item of images){const file=item.getAsFile();if(file)attachments.set(`image-${Date.now()}-${Math.random()}`,{label:file.name||L('Pasted image','Yapıştırılan görsel'),file});}drawAttachments();return;}const text=event.clipboardData?.getData('text/plain')||'',lines=text.split(/\r?\n/).length;if(lines>=8){event.preventDefault();attachments.set(`paste-${Date.now()}`,{label:t('chat.pastedText').replace('{count}',String(lines)),content:text});drawAttachments();}});
+    for(const target of [input,document.querySelector('.composer')]){target.addEventListener('dragover',event=>event.preventDefault());target.addEventListener('drop',event=>{event.preventDefault();const blockedFiles=[];for(const file of [...(event.dataTransfer?.files||[])]){if(isSecretFileName(file.name)){blockedFiles.push(file.name);continue;}attachments.set(`file-${Date.now()}-${Math.random()}`,{label:file.name,file});}drawAttachments();if(blockedFiles.length)setStatus(L(`Protected secret files were not attached: ${blockedFiles.join(', ')}`,`Gizli dosya olarak korunan dosyalar eklenmedi: ${blockedFiles.join(', ')}`));});}
+    function isSecretFileName(name){return /^mcp(?:-tools)?\.json$|^\.env(\.|$)|\.env$|^\.envrc$|^\.(npmrc|pypirc|netrc|git-credentials|htpasswd|pgpass|dockercfg)$|^_netrc$|^id_(rsa|dsa|ecdsa|ed25519)(\.pub)?$|\.(pem|key|p12|pfx|jks|keystore|kdbx|ppk|asc|gpg|tfvars|tfstate)$|^(secrets?|credentials?)(\.|$)|(service[-_]?account|client[-_]?secret)[^/]*\.json$/i.test(String(name||''));}
+    const semanticSuggestion = () => ({
+      label: '@codebase',
+      detail: L('Search the indexed project by meaning','İndekslenmiş projede anlamsal ara'),
+      run: () => {
+        const at = input.value.lastIndexOf('@');
+        if (at < 0) return;
+        input.value = input.value.slice(0, at) + '@codebase ';
+        hideSuggestions(); resizeInput(); input.focus();
+      }
+    });
+    input.addEventListener('input', () => {
+      resizeInput();const tokenEstimate=Math.ceil((input.value.length+[...attachments.values()].reduce((n,a)=>n+(a.content?.length||0),0))/4),percent=Math.min(100,Math.round(tokenEstimate/32000*100));document.getElementById('ring-label').textContent=`${percent}%`;document.getElementById('ring-value').style.strokeDashoffset=String(59.7*(1-percent/100)); const text = input.value; const slashStart = text.lastIndexOf('/'); const atStart = text.lastIndexOf('@');
+      if (slashStart >= 0 && (slashStart === 0 || /\s/.test(text[slashStart - 1])) && !/\s/.test(text.slice(slashStart))) {
+        const query = text.slice(slashStart).toLowerCase(); drawSuggestions(slashCommands.filter(command => command.name.startsWith(query)).map(command => ({ label: command.name, detail: command.detail, run: () => completeSlash(command) }))); return;
+      }
+      if (atStart >= 0 && (atStart === 0 || /\s/.test(text[atStart - 1])) && !/\s/.test(text.slice(atStart + 1))) {
+        const query = text.slice(atStart + 1); clearTimeout(searchTimer);
+        if (!query) { drawSuggestions([semanticSuggestion(), { label: t('chat.searchFiles'), detail: L('Pick from project files','Proje dosyalarında seç'), run: () => api.postMessage({ type: 'findFiles', query: '' }) }]); return; }
+        if ('codebase'.startsWith(query.toLowerCase())) {
+          drawSuggestions([semanticSuggestion()]);
+          return;
+        }
+        suggestions.innerHTML = (L('<div class="suggestion">Searching files…</div>','<div class="suggestion">Dosyalar aranıyor…</div>')); suggestions.hidden = false;
+        searchTimer = setTimeout(() => api.postMessage({ type: 'findFiles', query }), 180); return;
+      }
+      const hashStart=text.lastIndexOf('#');if(hashStart>=0&&(hashStart===0||/\s/.test(text[hashStart-1]))&&!/\s/.test(text.slice(hashStart+1))){const query=text.slice(hashStart+1);drawSuggestions([{label:L('# Add note to memory','# Hafızaya not ekle'),detail:query||L('Save a project decision to memory','Proje kararını hafızaya kaydet'),run:()=>{const note=input.value.slice(hashStart+1).trim();hideSuggestions();input.value=input.value.slice(0,hashStart);resizeInput();if(note)api.postMessage({type:'memoryNote',text:note});else api.postMessage({type:'memory'});}}]);return;}
+      hideSuggestions();
+    });
+    input.addEventListener('keydown', event => {
+      if(event.key==='Escape'&&busy){queuedMessages.length=0;document.getElementById('queue-count').hidden=true;api.postMessage({type:'stop'});event.preventDefault();return;}
+      if(event.key==='Tab'&&event.shiftKey){event.preventDefault();const order=['ask','auto','plan','full'];permission=order[(order.indexOf(permission)+1)%order.length];renderPermissionMenu();api.postMessage({type:'permission',value:permission});return;}
+      if(event.key==='ArrowUp'&&!input.value&&lastSent){event.preventDefault();input.value=lastSent;resizeInput();input.setSelectionRange(input.value.length,input.value.length);return;}
+      if (!suggestions.hidden && suggestionItems.length && ['ArrowDown', 'ArrowUp'].includes(event.key)) {
+        event.preventDefault(); selectedSuggestion = (selectedSuggestion + (event.key === 'ArrowDown' ? 1 : suggestionItems.length - 1)) % suggestionItems.length;
+        [...suggestions.children].forEach((item, index) => item.classList.toggle('active', index === selectedSuggestion)); return;
+      }
+      if (!suggestions.hidden && event.key === 'Enter' && suggestionItems[selectedSuggestion]) { event.preventDefault(); suggestionItems[selectedSuggestion].run(); return; }
+      if (event.key === 'Escape' && !suggestions.hidden) { hideSuggestions(); event.preventDefault(); return; }
+      if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); submit(); }
+    });
+    column.addEventListener('click', async event => {
+      const target = event.target;
+      const shortcut = target.closest('[data-command]');
+      if (shortcut) { api.postMessage({ type: shortcut.dataset.command }); return; }
+      const step = target.closest('[data-step]');
+      if (step) { step.disabled = true; api.postMessage({ type: 'approveStep', agentId: step.dataset.agentId, stepId: step.dataset.step, permission }); return; }
+      const reject=target.closest('[data-reject-step]');if(reject){reject.disabled=true;reject.textContent=t('agent.rejected');api.postMessage({type:'rejectStep',stepId:reject.dataset.rejectStep});return;}
+      const all=target.closest('[data-apply-all]');if(all){all.disabled=true;api.postMessage({type:'approveAll',agentId:all.dataset.applyAll,permission});return;}
+      const copy = target.closest('[data-copy]');
+      if (copy) { const text = decodeURIComponent(copy.dataset.copy); await navigator.clipboard.writeText(text); copy.textContent = t('chat.copied'); setTimeout(() => copy.textContent = t('chat.copy'), 1000); return; }
+      const proposal=target.closest('[data-apply-code],[data-new-code],[data-preview-code]');if(proposal){const type=proposal.hasAttribute('data-apply-code')?'applyBlock':proposal.hasAttribute('data-new-code')?'newFile':'previewBlock';api.postMessage({type,path:decodeURIComponent(proposal.dataset.applyCode||proposal.dataset.newCode||proposal.dataset.previewCode),content:decodeURIComponent(proposal.dataset.code||''),permission});return;}
+      const pendingAction=target.closest('[data-pending-action]');if(pendingAction){pendingAction.disabled=true;const message={type:pendingAction.dataset.pendingAction};if(pendingAction.dataset.path)message.path=pendingAction.dataset.path;api.postMessage(message);return;}
+      const action = target.closest('[data-action]');
+      if (action) { api.postMessage({ type: action.dataset.action }); return; }
+      const file = target.closest('[data-file]');
+      if (file) { api.postMessage({ type: 'openFile', path: decodeURIComponent(file.dataset.file), line: Number(file.dataset.line) || 1 }); }
+    });
+    window.addEventListener('message', event => {
+      const data = event.data;
+      if (data?.type === 'imageAgentStarted') {
+        startAnswer();
+        setStatus(t('status.inspecting'));
+        return;
+      }
+      if(data?.type==='commandApproval'){
+        const card=document.createElement('section');card.className='command-approval';card.dataset.approval=data.id;
+        const title=document.createElement('p');title.textContent=data.text;
+        const pre=document.createElement('pre'),code=document.createElement('code');code.textContent=data.command;pre.append(code);card.append(title,pre);
+        const actions=document.createElement('div');actions.className='approval-actions';card.append(actions);for(const [label,allowed] of [[data.action||L('Run','Çalıştır'),true],[L('Reject','Reddet'),false]]){const button=document.createElement('button');button.textContent=label;button.className=allowed?'approve':'reject';button.onclick=()=>{card.querySelectorAll('button').forEach(b=>b.disabled=true);api.postMessage({type:'commandApproval',id:data.id,allowed});};actions.append(button);}
+        column.append(card);setTimeout(()=>{card.querySelectorAll('button').forEach(b=>b.disabled=true);},300000);return;
+      }
+
+      if (data.type === 'language') {
+        language = data.language === 'tr' ? 'tr' : 'en'; dictionary = data.dictionary || dictionary; applyI18n();
+        permissionOptions[0].label=t('permission.ask'); permissionOptions[0].short=t('permission.askShort'); permissionOptions[0].detail=t('permission.askDetail');
+        permissionOptions[1].label=t('permission.auto'); permissionOptions[1].short=t('permission.autoShort'); permissionOptions[1].detail=t('permission.autoDetail');
+        permissionOptions[2].label=t('permission.plan'); permissionOptions[2].short=t('permission.planShort'); permissionOptions[2].detail=t('permission.planDetail');
+        permissionOptions[3].label=t('permission.full'); permissionOptions[3].short=t('permission.fullShort'); permissionOptions[3].detail=t('permission.fullDetail');
+        effortOptions[0].label=t('effort.low'); effortOptions[1].label=t('effort.medium'); effortOptions[2].label=t('effort.high');
+        renderPermissionMenu(); renderEffortMenu(); renderModelOptions(); document.documentElement.lang = language; localizeCuetsEmpty(); { const note = document.getElementById('trust-note'); if (note && !note.hasAttribute('hidden')) { note.remove(); showTrustNote(true); } }
+        const setup = document.getElementById('setup-card');
+        if (setup) { setup.remove(); renderSetupCard(true); }
+        document.getElementById('foot-hint').textContent = surface === 'cuets' ? L('Multi-agent', 'Çok ajanlı') : '';
+        if (window.__cudeLastContext) window.postMessage(window.__cudeLastContext, '*'); syncModelChip();
+        document.querySelectorAll('.message.assistant[data-raw]').forEach(answer => { answer.innerHTML=renderMarkdown(answer.dataset.raw); });
+        const pendingHead=document.querySelector('.pending-changes .card-head');if(pendingHead)pendingHead.textContent=`${t('agent.pending')} · ${pendingHead.dataset.count||''}`;
+        document.querySelectorAll('[data-pending-action]').forEach(button => { const accept=button.dataset.pendingAction==='acceptChange';button.textContent=button.dataset.all?(accept?t('chat.acceptAll'):t('chat.rejectAll')):(accept?t('chat.accept'):t('chat.reject')); });
+        return;
+      }
+      if (data.type === 'providerModels') { window.__cudeModelsLoaded = true;
+        modelOptions = []; let selected = '';
+        const profiles = [...(data.providers || [])].sort((a, b) => (/norovox|emrevrg/i.test(a.name + a.id) ? -1 : 1) - (/norovox|emrevrg/i.test(b.name + b.id) ? -1 : 1));
+        profiles.forEach(profile => (profile.models || []).forEach(model => {
+          const value = encodeURIComponent(JSON.stringify({ providerId: profile.id, model }));
+          const viaOpencode = profile.id === 'cude-cli-opencode-cli' && model.includes('/'); modelOptions.push({ value, label: cudeShort(model), short: cudeShort(model), detail: viaOpencode ? `OpenCode · ${model.split('/').slice(0, -1).join('/')}` : profile.name, provider: profile.name, full: model, efforts: profile.modelEfforts?.[model] });
+          if (profile.id === data.active && model === data.model) selected = value;
+        }));
+        for (const free of data.freeModels || []) {
+          const providerId = free.connectionId || `cude-free:${free.providerId}`;
+          const value = encodeURIComponent(JSON.stringify({providerId, model: free.model}));
+          if (modelOptions.some(item => item.value === value)) continue;
+          // Picker shows only Cude-provided models and models the user connected (API or CLI); no key-required catalog entries.
+          if (!free.connectionId) continue;
+          modelOptions.push({value, label: free.connectionId ? `${free.name} · Free` : `${free.name} · ${L('Connect provider','Sağlayıcı bağla')}`,
+            short: `${free.model} · Free`, detail: free.connectionId
+              ? `${free.provider} · ${/google|gemini/i.test(free.provider) ? t('free.modelWarning') : t('free.modelPolicyUnknown')}`
+              : `${free.provider} · ${L('Add a free key from this provider to use it','Kullanmak için bu sağlayıcıdan ücretsiz anahtar ekle')}`,
+            provider: free.provider, section: 'free', setup: !free.connectionId});
+          if (providerId === data.active && free.model === data.model) selected = value;
+        }
+        if(modelOptions.some(item=>!item.setup)&&Number(data.catalogCount)>0){const value=encodeURIComponent(JSON.stringify({providerId:'cude-router',model:'__cude_router__'}));modelOptions.unshift({value,label:t('router.auto'),short:t('router.auto'),detail:L('Picks among your connected models','Bağladığın modeller arasından seçer')});if(data.model==='__cude_router__')selected=value;}
+        if (!selected && data.model && data.model !== '__cude_router__') { const existing = modelOptions.find(o => (o.full || o.label) === data.model); if (existing) selected = existing.value; } if (!selected && data.model && data.model !== '__cude_router__') { const value = encodeURIComponent(JSON.stringify({ providerId: data.active || 'local', model: data.model })); const prof = (data.providers || []).find(p => p.id === data.active); modelOptions.push({ value, label: cudeShort(data.model), full: data.model, short: cudeShort(data.model), detail: prof?.name || 'Local', provider: prof?.name || 'Local' }); selected = value; }
+        if (!selected && data.active) { const prof = (data.providers || []).find(p => p.id === data.active); const first = prof?.models?.[0]; if (first) { const value = encodeURIComponent(JSON.stringify({ providerId: prof.id, model: first })); if (modelOptions.some(o => o.value === value)) selected = value; } }
+        selectedModel = selected;
+        refreshModelMenu();
+        input.placeholder = selected ? t('chat.prompt') : (modelOptions.length ? t('chat.chooseModelFirst') : t('chat.addProviderFirst'));
+        renderSetupCard(!selected);
+      }
+      if (data.type === 'fileResults') {
+        const rows = (data.files || []).map(result => {const file=typeof result==='string'?result:result.file,line=typeof result==='string'?0:result.line,query=String(data.query||''),label=line?`${file}:${line}`:file;return ({ label, detail:line?t('chat.match').replace('{text}',result.text):t('chat.addPathToContext'), highlight:query, run: () => {
+          const start = input.value.lastIndexOf('@'); input.value = `${input.value.slice(0, start)} `; attachments.set(file,{label:file,projectFile:true}); drawAttachments(); resizeInput(); input.focus(); hideSuggestions();
+        } });});
+        drawSuggestions(rows.length ? rows : [{ label: t('chat.noFiles'), detail: t('chat.tryAnother'), run: hideSuggestions }]);
+      }
+      if (data.type === 'delta') {
+        let answer = column.querySelector('.message.assistant:last-child');
+        if (!answer || answer.dataset.done === '1') answer = addAssistant();
+        answer.dataset.raw = (answer.dataset.raw || '') + data.text; answer.innerHTML = renderMarkdown(answer.dataset.raw); if (wasBottom) scrollBottom(false);
+      }
+      if (data.type === 'agentCheckpoint') {
+        const card = addAssistant();
+        card.dataset.agentCheckpoint = data.id;
+        const summary = document.createElement('p');
+        summary.textContent = data.summary;
+        const actions = document.createElement('div');
+        actions.className = 'cuets-wait';
+        const question = document.createElement('span');
+        question.textContent = t('loop.continuePrompt');
+        actions.append(question);
+        for (const resume of [true, false]) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = t(resume ? 'cuets.continue' : 'cuets.stopTask');
+          button.onclick = () => {
+            actions.querySelectorAll('button').forEach(item => { item.disabled = true; });
+            api.postMessage({type:'agentCheckpointDecision',id:data.id,resume});
+          };
+          actions.append(button);
+        }
+        card.append(summary,actions);
+        setStatus('');
+        if (wasBottom) scrollBottom();
+      }
+      if (data.type === 'agentCheckpointClosed') {
+        const card = [...column.querySelectorAll('[data-agent-checkpoint]')].find(item => item.dataset.agentCheckpoint === data.id);
+        card?.querySelector('.cuets-wait')?.remove();
+      }
+      if (data.type === 'answer') {
+        let answer = column.querySelector('.message.assistant:last-child');
+        if (data.text) { if (!answer || answer.dataset.done === '1') answer = addAssistant(); answer.innerHTML = renderMarkdown(data.text); answer.dataset.raw = data.text; answer.dataset.done = '1'; if(routeForAnswer){const route=document.createElement('div');route.className='activity done';route.textContent=t('router.route').replace('{model}',routeForAnswer.model).replace('{reason}',routeForAnswer.reason);answer.appendChild(route);routeForAnswer=null;} }
+        if (answer && awaitingAnswer && (permission === 'auto' || permission === 'full')) { answer.querySelectorAll('[data-apply-code]').forEach(button => { if (button.dataset.autoApplied) return; button.dataset.autoApplied = '1'; api.postMessage({ type: 'applyBlock', path: decodeURIComponent(button.dataset.applyCode), content: decodeURIComponent(button.dataset.code || ''), permission }); button.textContent = t('chat.autoApplied'); button.disabled = true; button.classList.add('auto-applied'); }); }
+         awaitingAnswer = false; finish(); if (wasBottom) scrollBottom();
+      }
+      if(data.type==='route'){routeForAnswer=data;}
+      if (data.type === 'error') { awaitingAnswer = false; const answer = addAssistant(); answer.textContent = data.text; finish(); }
+      if (data.type === 'activity') addActivity(data.label, data.detail);
+      if (data.type === 'status') setStatus(data.text);
+      if (data.type === 'context') { window.__cudeCtx = true; window.__cudeLastContext = data; document.getElementById('project').textContent = data.name; { const pl = data.project === true ? document.getElementById('project-button-label') : null; if (pl) pl.textContent = data.open === false ? L('Select project', 'Proje seç') : data.name; } { const h = data.project === true ? document.querySelector('#empty h1') : null; const tr = (document.documentElement.lang || '').startsWith('tr'); if (h) h.textContent = data.open === false ? (tr ? 'Bir proje aç ya da soru sor' : 'Open a project or ask anything') : (tr ? data.name + ' üzerinde ne yapalım?' : 'What should we build in ' + data.name + '?'); let meta = document.getElementById('empty-meta'); if (!meta) { meta = document.createElement('div'); meta.id = 'empty-meta'; meta.className = 'empty-meta'; document.querySelector('.composer-wrap')?.appendChild(meta); } meta.replaceChildren(...[(tr ? 'Bu bilgisayar' : 'Local'), data.name].filter(Boolean).map(t => { const s = document.createElement('span'); s.textContent = t; return s; })); } const open = document.querySelector('.shortcut[data-command="openProject"]'); if (open) open.style.display = data.open===false ? '' : 'none'; }
+      if(data.type==='activeContext'){activeContext=data.context||null;attachments.delete('__active');if(activeContext)attachments.set('__active',{label:activeContext.label,active:true});drawAttachments();}
+      if(data.type==='contextUsage'){const percent=Math.max(0,Math.min(100,Number(data.percent)||0));document.getElementById('ring-label').textContent=`${percent}%`;document.getElementById('ring-value').style.strokeDashoffset=String(59.7*(1-percent/100));}
+      if(data.type==='pendingChange'){
+        column.querySelector('.pending-changes')?.remove();const files=Array.isArray(data.files)?data.files:[];
+        if(files.length){const card=document.createElement('section');card.className='changes pending-changes';const head=document.createElement('div');head.className='card-head';head.dataset.count=String(files.length);head.textContent=`${t('agent.pending')} · ${files.length}`;card.appendChild(head);const list=document.createElement('div');list.className='file-list';
+          for(const file of files){const row=document.createElement('div');row.className='file-row';const name=document.createElement('span');name.className='file-name';name.textContent=file.path;const counts=document.createElement('span');counts.className='count';counts.textContent=`+${file.added||0} −${file.removed||0}`;row.append(name,counts);const actions=document.createElement('span');actions.className='change-actions';for(const [label,type] of [[t('chat.accept'),'acceptChange'],[t('chat.reject'),'rejectChange']]){const button=document.createElement('button');button.className='secondary';button.textContent=label;button.dataset.pendingAction=type;button.dataset.path=file.path;actions.appendChild(button);}row.appendChild(actions);list.appendChild(row);}
+          card.appendChild(list);const actions=document.createElement('div');actions.className='change-actions';for(const [label,type] of [[t('chat.acceptAll'),'acceptChange'],[t('chat.rejectAll'),'rejectChange']]){const button=document.createElement('button');button.className='secondary';button.textContent=label;button.dataset.pendingAction=type;button.dataset.all='true';actions.appendChild(button);}card.appendChild(actions);column.appendChild(card);if(wasBottom)scrollBottom();
+        }
+      }
+      if (data.type === 'changes') {
+        const card = document.createElement('section'); card.className = 'changes';
+        const head = document.createElement('div'); head.className = 'card-head'; head.innerHTML = `<span>${data.files?.length || 0} ${(data.files?.length || 0) === 1 ? t('chat.fileChanged') : t('chat.filesChanged')}</span><span class="count"><span class="plus">+${data.added || 0}</span> <span class="minus">−${data.removed || 0}</span></span><span class="change-actions"><button class="secondary" data-action="undo">${t('chat.undo')}</button><button class="secondary" data-action="diff">${t('chat.openDiff')}</button></span>`; card.appendChild(head);
+        const list = document.createElement('div'); list.className = 'file-list';
+        (data.files || []).slice(0, 6).forEach(file => { const row = document.createElement('div'); row.className = 'file-row'; row.innerHTML = `<span class="plus">+${file.added || 0}</span><span class="minus">−${file.removed || 0}</span><span class="file-name">${escapeHtml(file.path)}</span>`; list.appendChild(row); });
+        if (data.files?.length > 6) { const more = document.createElement('button'); more.className = 'secondary'; more.dataset.action = 'more'; more.textContent = data.files.length-6 === 1 ? t('chat.moreFile') : t('chat.moreFiles').replace('{count}',String(data.files.length-6)); list.appendChild(more); }
+        card.appendChild(list); column.appendChild(card); if (wasBottom) scrollBottom();
+      }
+      if (data.type === 'composer') { input.value = String(data.text || ''); input.dispatchEvent(new Event('input')); input.focus(); }
+      if (data.type === 'session') {
+        if (data.title) document.getElementById('thread').textContent = data.title;
+        (data.messages || []).forEach(message => { if (message.role === 'user') addUser(message.content); else { const answer = addAssistant(); answer.innerHTML = renderMarkdown(message.content); answer.dataset.done = '1'; } });
+      }
+      if (data.type === 'plan') {
+        const card = document.createElement('section'); card.className = 'plan';
+        const header = document.createElement('div'); header.className = 'card-head'; header.innerHTML = `<span>${escapeHtml(data.title || t('chat.agentsPlan'))}</span><span class="count">${(data.steps?.length||0) === 1 ? t('chat.step') : t('chat.steps').replace('{count}',String(data.steps?.length||0))}</span>`;if((data.steps||[]).some(step=>step.kind==='file')){const actions=document.createElement('span');actions.className='change-actions';const apply=document.createElement('button');apply.className='secondary';apply.textContent=t('chat.applyFiles');apply.dataset.applyAll=data.agentId;actions.appendChild(apply);header.appendChild(actions);}card.appendChild(header);
+        if (data.summary) { const summary = document.createElement('p'); summary.className = 'plan-summary'; summary.textContent = data.summary; card.appendChild(summary); }
+        (data.steps || []).forEach(step => { const row = document.createElement('div'); row.className = 'plan-step'; const kind = document.createElement('span'); kind.className = 'step-type'; const kindName = step.kind === 'file' ? t('agent.changes') : step.kind === 'command' ? 'Command' : step.kind === 'mcp' ? ('MCP · ' + String(step.tool || '').slice(0, 40)) : t('chat.plan'); const icon = document.createElement('span'); icon.className = 'step-icon'; icon.innerHTML = iconMarkup(step.kind === 'file' ? 'file' : step.kind === 'command' || step.kind === 'mcp' ? 'terminal' : 'plan'); const label = document.createElement('span'); label.textContent = kindName; kind.append(icon, label); const title = document.createElement('span'); title.className = 'step-title'; title.textContent = step.path?`${step.title} · ${step.path}`:step.title; const actions=document.createElement('span');actions.className='change-actions';const button = document.createElement('button'); button.textContent = step.kind === 'command' ? t('chat.inspect') : t('chat.accept'); button.dataset.step = step.id; button.dataset.agentId = data.agentId;const reject=document.createElement('button');reject.textContent=t('chat.reject');reject.className='secondary';reject.dataset.rejectStep=step.id;actions.append(button,reject);row.append(kind, title, actions); card.appendChild(row); });
+        if (data.artifacts?.length) { const artifacts = document.createElement('div'); artifacts.className = 'artifact'; artifacts.textContent = t('chat.generatedFiles').replace('{files}',data.artifacts.join(', ')); card.appendChild(artifacts); }
+        column.appendChild(card); if (wasBottom) scrollBottom();
+      }
+      if (data.type === 'clear') {
+        if (data.surface && data.surface !== surface) setSurface(data.surface);
+        column.replaceChildren((surface === 'cuets' ? cuetsEmptyTemplate : emptyTemplate).cloneNode(true));
+        document.querySelector('.shell')?.classList.add('is-empty');
+        localizeCuetsEmpty(); applyI18n(); document.getElementById('thread').textContent = t('chat.new'); finish();
+      }
+      if (data.type === 'permission') { permission = data.value; renderPermissionMenu(); }
+    });
+    document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'l') { event.preventDefault(); input.focus(); } });
+    // Cuets long-running tasks: live checklist card (cuetsProgress) and resumable task card (cuetsResumable).
+    const CUETS_MARK = { pending: '○', in_progress: '◐', done: '✓', failed: '✗' };
+    function cuetsFill(text, values) { return Object.entries(values || {}).reduce((value, [key, replacement]) => value.split(`{${key}}`).join(String(replacement)), String(text || '')); }
+    function cuetsButton(label, action, taskId) { const button = document.createElement('button'); button.type = 'button'; button.className = 'secondary'; button.textContent = label; button.dataset.cuetsAction = action; if (taskId) button.dataset.taskId = taskId; return button; }
+    function renderCuetsProgress(data) {
+      if (!data || typeof data.taskId !== 'string') return;
+      let card = [...column.querySelectorAll('.cuets-progress')].find(item => item.dataset.taskId === data.taskId);
+      if (!card) { card = document.createElement('section'); card.className = 'plan cuets-progress'; card.dataset.taskId = data.taskId; }
+      card.replaceChildren();
+      const head = document.createElement('div'); head.className = 'card-head';
+      const title = document.createElement('span'); title.style.cssText = 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'; title.textContent = data.title || 'Cuets';
+      const progress = document.createElement('span'); progress.className = 'count'; progress.textContent = cuetsFill(t('cuets.progress'), { done: data.done || 0, total: data.total || 0 });
+      const round = document.createElement('span'); round.className = 'count'; round.textContent = cuetsFill(t('cuets.round'), { round: data.round || 0, max: data.maxRounds || 0 });
+      head.append(title, progress, round); card.appendChild(head);
+      const list = document.createElement('div'); list.className = 'cuets-items';
+      for (const item of (Array.isArray(data.items) ? data.items : []).slice(0, 20)) {
+        const status = ['pending', 'in_progress', 'done', 'failed'].includes(item.status) ? item.status : 'pending';
+        const row = document.createElement('div'); row.className = `cuets-item ${status}`; row.title = t('cuets.status.' + status) + (item.note ? ` · ${item.note}` : '');
+        const mark = document.createElement('span'); mark.className = 'cuets-mark-icon'; mark.textContent = CUETS_MARK[status];
+        const text = document.createElement('span'); text.className = 'cuets-title'; text.textContent = item.title || '';
+        row.append(mark, text); list.appendChild(row);
+      }
+      card.appendChild(list);
+      const check = data.verification;
+      if (check) { const meta = document.createElement('div'); meta.className = `cuets-meta ${check.skipped ? '' : check.ok ? 'ok' : 'fail'}`; meta.textContent = check.skipped ? t('cuets.verifySkipped') : cuetsFill(check.ok ? t('cuets.verifyPassed') : t('cuets.verifyFailed'), { command: check.command || '' }); card.appendChild(meta); }
+      if (data.waiting) { const wait = document.createElement('div'); wait.className = 'cuets-wait'; const note = document.createElement('span'); note.textContent = t('cuets.waiting'); wait.append(note, cuetsButton(t('cuets.continue'), 'round-continue', data.taskId), cuetsButton(t('cuets.stopTask'), 'stop', data.taskId)); card.appendChild(wait); }
+      column.querySelector('.cuets-resume')?.remove();
+      column.appendChild(card); if (wasBottom) scrollBottom();
+    }
+    function renderCuetsResume(data) {
+      column.querySelector('.cuets-resume')?.remove();
+      const task = data && data.task; if (!task || typeof task.id !== 'string' || surface !== 'cuets' || busy) return;
+      const card = document.createElement('section'); card.className = 'plan cuets-resume'; card.dataset.taskId = task.id;
+      const head = document.createElement('div'); head.className = 'card-head';
+      const title = document.createElement('span'); title.textContent = t('cuets.resumeTitle');
+      const actions = document.createElement('span'); actions.className = 'change-actions'; actions.append(cuetsButton(t('cuets.continue'), 'resume', task.id), cuetsButton(t('cuets.discard'), 'discard', task.id));
+      head.append(title, actions); card.appendChild(head);
+      const name = document.createElement('p'); name.className = 'plan-summary'; name.style.color = 'var(--text)'; name.textContent = task.title || '';
+      let when = ''; try { when = new Date(Number(task.updatedAt) || Date.now()).toLocaleString((document.documentElement.lang || 'en').startsWith('tr') ? 'tr-TR' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch { }
+      const meta = document.createElement('p'); meta.className = 'plan-summary'; meta.textContent = cuetsFill(t('cuets.resumeMeta'), { progress: task.progress || `${task.done || 0}/${task.total || 0}`, round: task.round || 0, when });
+      card.append(name, meta); column.appendChild(card); if (wasBottom) scrollBottom();
+    }
+    document.addEventListener('click', event => { const tab = event.target.closest && event.target.closest('.surface'); if (tab && tab.dataset.surface === 'cuets') api.postMessage({ type: 'cuetsOpened' }); else if (tab) column.querySelector('.cuets-resume')?.remove(); });
+    column.addEventListener('click', event => {
+      const button = event.target.closest && event.target.closest('[data-cuets-action]'); if (!button) return;
+      const action = button.dataset.cuetsAction, taskId = button.dataset.taskId || '';
+      if (action === 'round-continue') { button.disabled = true; api.postMessage({ type: 'cuetsRoundContinue', taskId }); return; }
+      if (action === 'stop') { button.disabled = true; api.postMessage({ type: 'stop' }); return; }
+      if (action === 'discard') { button.closest('.cuets-resume')?.remove(); api.postMessage({ type: 'cuetsDiscard', taskId }); return; }
+      if (action === 'resume') { if (busy) return; button.closest('.cuets-resume')?.remove(); if (surface !== 'cuets') setSurface('cuets'); api.postMessage({ type: 'cuetsSelectTask', taskId }); sendPayload(t('cuets.continueWord'), [], 'agent', false, '', false); }
+    });
+    window.addEventListener('message', event => { const data = event.data || {}; if (data.type === 'cuetsProgress') renderCuetsProgress(data); else if (data.type === 'cuetsResumable') renderCuetsResume(data); });
+    input.focus();
+    { const c = document.getElementById('model-chip-label'); if (c && !window.__cudeModelsLoaded) c.textContent = L('Loading models…', 'Modeller yükleniyor…'); } localizeCuetsEmpty(); showTrustNote(!!document.getElementById('prompt')?.disabled); window.addEventListener('message', event => { if (event.data?.type === 'trust') showTrustNote(!event.data.trusted); }); api.postMessage({ type: 'ready' }); { let tries = 0; const again = setInterval(() => { if (window.__cudeCtx || ++tries > 60) { clearInterval(again); return; } { const c = document.getElementById('model-chip-label'); if (c && !window.__cudeModelsLoaded) c.textContent = L('Loading models…', 'Modeller yükleniyor…'); } api.postMessage({ type: 'ready' }); }, 1000); }
+  </script>
+</body>
+</html>
+

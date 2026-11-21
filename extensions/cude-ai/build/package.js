@@ -1,0 +1,13 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+const version=require('../package.json').version;
+const here = __dirname, root = path.resolve(here, '..');
+const out = path.join(root, 'dist'), stage = path.join(root, '.vsix-stage');
+fs.rmSync(stage, { recursive: true, force: true }); fs.mkdirSync(path.join(stage, 'extension'), { recursive: true });
+for (const name of ['package.json','LICENSE','out','media','themes','bin','data']) fs.cpSync(path.join(root,name), path.join(stage,'extension',name), { recursive: true });
+for (const name of Object.keys(require('../package.json').dependencies)) fs.cpSync(path.join(root,'node_modules',name),path.join(stage,'extension','node_modules',name),{recursive:true});
+fs.writeFileSync(path.join(stage,'[Content_Types].xml'), `<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="map" ContentType="application/json"/><Default Extension="svg" ContentType="image/svg+xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Default Extension="xml" ContentType="text/xml"/></Types>`);
+fs.writeFileSync(path.join(stage,'extension.vsixmanifest'), `<?xml version="1.0" encoding="utf-8"?><PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011"><Metadata><Identity Language="en-US" Id="cude-ai" Publisher="cude" Version="${version}"/><DisplayName>Cude AI</DisplayName><Description xml:space="preserve">Built-in AI workspace for Cude IDE.</Description><Tags>AI,assistant,agents</Tags><Categories>Machine Learning</Categories><Properties><Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.90.0"/><Property Id="Microsoft.VisualStudio.Code.ExtensionKind" Value="ui"/></Properties></Metadata><Installation><InstallationTarget Id="Microsoft.VisualStudio.Code" Version="^1.90.0"/></Installation><Dependencies/><Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/><Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/package.json" Addressable="true"/></Assets></PackageManifest>`);
+fs.mkdirSync(out,{recursive:true});const vsix=path.join(out,`cude-ai-${version}.vsix`);try{fs.rmSync(vsix,{force:true});}catch{}
+execFileSync('tar',['-a','-c','-f',vsix,'-C',stage,'.'],{stdio:'inherit'});fs.rmSync(stage,{recursive:true,force:true});console.log(`Created ${vsix}`);

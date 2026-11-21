@@ -1,0 +1,49 @@
+@supports (appearance: base-select) {
+  select {
+    appearance: base-select;
+  }
+
+  select::picker(select) {
+    appearance: base-select;
+    color: var(--vscode-foreground, #f2efe8);
+    background: var(--vscode-editorWidget-background, #1b1b18);
+    border: 1px solid color-mix(in srgb, #d69b70 38%, var(--vscode-panel-border, #514237));
+    border-radius: 8px;
+    box-shadow: 0 10px 26px #0006;
+    padding: 4px;
+    max-height: min(320px, 60vh);
+  }
+
+  select::picker-icon,
+  select option::checkmark {
+    color: #d69b70;
+  }
+
+  select option {
+    border-radius: 4px;
+    padding: 5px 8px;
+  }
+
+  select option:is(:focus-visible, :hover, :checked) {
+    background: color-mix(in srgb, #d69b70 28%, var(--vscode-editorWidget-background, #1b1b18));
+    color: var(--vscode-foreground, #fff1e4);
+  }
+
+  body.vscode-light select::picker(select),
+  body.vscode-high-contrast-light select::picker(select) {
+    color: #23231f;
+    background: #ffffff;
+    border-color: #e0cbb8;
+    box-shadow: 0 10px 26px rgba(60, 40, 20, .14);
+  }
+
+  body.vscode-light select::picker-icon,
+  body.vscode-light select option::checkmark {
+    color: #b8713f;
+  }
+
+  body.vscode-light select option:is(:focus-visible, :hover, :checked) {
+    background: #f1e3d6;
+    color: #23231f;
+  }
+}

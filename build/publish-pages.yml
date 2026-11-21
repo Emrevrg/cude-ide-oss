@@ -1,0 +1,52 @@
+name: Publish signed Cude update to Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version of the existing GitHub Release, without v
+        required: true
+        type: string
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/configure-pages@v5
+      - name: Download and verify signed update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_VERSION" =~ ^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})$ ]]
+          archive="Cude-IDE-$RELEASE_VERSION-win32-x64.zip"
+          gh release download "v$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --pattern "$archive" --pattern update-manifest.json --dir release-input
+          cmp --silent update/manifest.json release-input/update-manifest.json
+          node release-tools/stage-pages-update.js "release-input/$archive" release-input/update-manifest.json release-tools/release-trust.json . index.html "$RUNNER_TEMP/cude-pages"
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ runner.temp }}/cude-pages
+
+  deploy:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: pages

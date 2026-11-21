@@ -1,0 +1,7 @@
+Third-party runtime: llama.cpp
+Upstream: https://github.com/ggml-org/llama.cpp
+Pinned release: b12503 (Windows x64 CPU)
+Upstream license: MIT; the full license text is in LICENSE.
+Additional included runtime notice: LICENSE-LLVM-OpenMP.
+Release asset: llama-b12503-bin-win-cpu-x64.zip
+Asset SHA-256: 64BEE9B6FECE8E66C665C40290CBB84706AF23C670041D024B56A71A39859D77
