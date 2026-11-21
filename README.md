@@ -1,3 +1,7 @@
+![Cude IDE](docs/poster.jpg)
+
+**Download:** [Cude IDE for Windows 10 & 11](https://emrevrg.github.io/cude-ide-releases/) · [Releases](https://github.com/Emrevrg/cude-ide-releases/releases)
+
 # Cude IDE 0.1.0
 
 Cude IDE is a Windows x64 portable development environment branded and configured for Cude Studio, with Cude AI preinstalled. Its 0.1.0 runtime is derived from a pinned VSCodium/Code-OSS distribution; it does not yet build from a Cude-maintained source fork.
