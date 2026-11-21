@@ -51,3 +51,7 @@ The user-funded plan is local Ollama + BYOK now, with an opt-in Puter User-Pays 
 Recommended sequence: (1) establish the Cude-owned Code-OSS source fork and upstream review/merge gates; (2) build signed reproducible Windows/macOS/Linux releases and Cude-only update distribution; (3) add a permissioned file/terminal tool runtime and real agent orchestration; (4) finish MCP tool execution and provider failover; (5) add broad integration/e2e tests and benchmark reliability before claiming competitor parity.
 
 See [RAPOR_0.1.0.md](RAPOR_0.1.0.md) for packaging and verification details.
+
+## Support
+
+Questions, bug reports and feedback: [cudide-sup@outlook.com](mailto:cudide-sup@outlook.com)

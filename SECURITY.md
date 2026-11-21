@@ -45,3 +45,7 @@ The release operator can sign a Windows ZIP with an Ed25519 release key kept out
 Publish the ZIP and signed manifest together through the authorized Cude release host. Consumers must use a public key pinned independently of that host and remember the last accepted sequence. Key rotation requires a separate trust decision. This command prepares and verifies the artifacts. A production feed and server rollout still require the authorized operator. A client-supplied version is not authorization.
 
 The Windows IDE registers **Cude: Configure Release Trust** and **Cude: Check for Signed Updates**. Provision a local JSON file with the release feed URL under `feed` and the Ed25519 public PEM under `key`. Verify the fingerprint through an independent channel when the IDE prompts. The IDE checks the signed manifest, records its accepted sequence and hash, and offers a verified ZIP download to a chosen folder. It never installs the ZIP automatically. It does not disable the editor based on an update feed.
+
+## Contact
+
+Report security issues privately to [cudide-sup@outlook.com](mailto:cudide-sup@outlook.com).
